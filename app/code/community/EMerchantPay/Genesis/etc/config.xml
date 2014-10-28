@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+       <EMerchantPay_Genesis>
+         <version>0.1.0</version>
+       </EMerchantPay_Genesis>
+    </modules>
+
+    <global>
+       <blocks>
+            <genesis>
+                <class>EMerchantPay_Genesis_Block</class>
+            </genesis>
+        </blocks>
+
+        <models>
+            <genesis>
+                <class>EMerchantPay_Genesis_Model</class>
+            </genesis>
+        </models>
+
+        <resources>
+            <genesis_setup>
+                <setup>
+                    <module>EMerchantPay_Genesis</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </genesis_setup>
+            <genesis_write>
+                <connection>
+                  <use>core_write</use>
+                </connection>
+            </genesis_write>
+            <genesis_read>
+               <connection>
+                <use>core_read</use>
+              </connection>
+            </genesis_read>
+        </resources>
+    </global>
+
+    <default>
+        <payment>
+            <genesis>
+                <active>0</active>
+                <model>genesis/paymentMethod</model>
+                <order_status>pending</order_status>
+                <title>Credit Card (eMerchantPay)</title>
+                <cctypes>AE,VI,MC,DI</cctypes>
+                <payment_action>authorize</payment_action>
+                <allowspecific>0</allowspecific>
+            </genesis>
+         </payment>
+    </default>
+</config>

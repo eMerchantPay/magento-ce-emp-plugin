@@ -1,0 +1,11 @@
+<config>
+    <modules>
+        <EMerchantPay_Genesis>
+            <active>true</active>
+            <codePool>community</codePool>
+            <depends>
+                <Mage_Payment />
+            </depends>
+        </EMerchantPay_Genesis>
+    </modules>
+</config>
