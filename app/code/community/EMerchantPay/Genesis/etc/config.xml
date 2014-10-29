@@ -8,50 +8,36 @@
 
     <global>
        <blocks>
-            <genesis>
+            <emerchantpay_genesis>
                 <class>EMerchantPay_Genesis_Block</class>
-            </genesis>
+            </emerchantpay_genesis>
         </blocks>
 
         <models>
-            <genesis>
+            <emerchantpay_genesis>
                 <class>EMerchantPay_Genesis_Model</class>
-            </genesis>
+            </emerchantpay_genesis>
         </models>
 
-        <resources>
-            <genesis_setup>
-                <setup>
-                    <module>EMerchantPay_Genesis</module>
-                </setup>
-                <connection>
-                    <use>core_setup</use>
-                </connection>
-            </genesis_setup>
-            <genesis_write>
-                <connection>
-                  <use>core_write</use>
-                </connection>
-            </genesis_write>
-            <genesis_read>
-               <connection>
-                <use>core_read</use>
-              </connection>
-            </genesis_read>
-        </resources>
+        <helpers>
+            <emerchantpay_genesis>
+                <class>EMerchantpay_Genesis_Helper</class>
+            </emerchantpay_genesis>
+        </helpers>
+
     </global>
 
     <default>
         <payment>
-            <genesis>
+            <emerchantpay_genesis>
                 <active>0</active>
-                <model>genesis/paymentMethod</model>
+                <model>emerchantpay_genesis/standard</model>
                 <order_status>pending</order_status>
                 <title>Credit Card (eMerchantPay)</title>
                 <cctypes>AE,VI,MC,DI</cctypes>
                 <payment_action>authorize</payment_action>
                 <allowspecific>0</allowspecific>
-            </genesis>
+            </emerchantpay_genesis>
          </payment>
     </default>
 </config>

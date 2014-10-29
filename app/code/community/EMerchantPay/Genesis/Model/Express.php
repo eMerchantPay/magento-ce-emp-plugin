@@ -1,6 +1,11 @@
 <?php
 
-class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abstract
+require_once Mage::getBaseDir('lib').DS.'Genesis'.DS.'vendor'.DS.'autoload.php';
+
+use \Genesis\Genesis as Genesis;
+use \Genesis\GenesisConfig as GenesisConf;
+
+class EMerchantPay_Genesis_Model_Express extends Mage_Payment_Model_Method_Abstract
 {
 	/**
 	 * unique internal payment method identifier
@@ -88,36 +93,38 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
 		try {
 			$genesis
 				->request()
-				->setCurrency($order->getBaseCurrencyCode())
-				->setAmount($amount)
-				->setUsage(' ')
-				->setDescription(' ')
-				->setCustomerPhone()
-				->setCustomerEmail($billing->getCustomerEmail())
-				->setCardHolder($payment->getCcOwner())
-				->setCardNumber($payment->getCcNumber())
-				->setCvv($payment->getCcCid())
-				->setExpirationYear($payment->getCcExpYear())
-				->setExpirationMonth($payment->getCcExpMonth())
-				->setNotificationUrl(Mage::helper('genesis')->getNotifyURL())
-				->setReturnSuccessUrl(Mage::helper('genesis')->getSuccessURL())
-				->setReturnFailureUrl(Mage::helper('genesis')->getFailureURL())
-				->setReturnCancelUrl(Mage::helper('genesis')->getCancelURL())
-				->setBillingFirstName($billing->getData('firstname'))
-				->setBillingLastName($billing->getData('lastname'))
-				->setBillingAddress1($billing->getStreet(1))
-				->setBillingAddress2($billing->getStreet(2))
-				->setBillingZipCode($billing->getPostcode())
-				->setBillingCity($billing->getCity())
-				->setBillingState($billing->getRegion())
-				->setShippingFirstName($shipping->getData('firstname'))
-				->setShippingLastName($shipping->getData('lastname'))
-				->setShippingAddress1($shipping->getStreet(1))
-				->setShippingAddress2($shipping->getStreet(2))
-				->setShippingZipCode($shipping->getPostcode())
-				->setShippingCity($shipping->getCity())
-				->setShippingState($shipping->getRegion())
-				->addTransactionType('authorize');
+					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransationId())
+					->setCurrency($order->getBaseCurrencyCode())
+					->setAmount($amount)
+					->setUsage(' ')
+					->setDescription(' ')
+					->setCustomerPhone($billing->getCustomerPhone())
+					->setCustomerEmail($billing->getCustomerEmail())
+					->setNotificationUrl(Mage::helper('emechantpay_genesis')->getNotifyURL())
+					->setReturnSuccessUrl(Mage::helper('emechantpay_genesis')->getSuccessURL())
+					->setReturnFailureUrl(Mage::helper('emechantpay_genesis')->getFailureURL())
+					->setReturnCancelUrl(Mage::helper('emechantpay_genesis')->getCancelURL())
+					->setBillingFirstName($billing->getData('firstname'))
+					->setBillingLastName($billing->getData('lastname'))
+					->setBillingAddress1($billing->getStreet(1))
+					->setBillingAddress2($billing->getStreet(2))
+					->setBillingZipCode($billing->getPostcode())
+					->setBillingCity($billing->getCity())
+					->setBillingState($billing->getRegion())
+					->setShippingFirstName($shipping->getData('firstname'))
+					->setShippingLastName($shipping->getData('lastname'))
+					->setShippingAddress1($shipping->getStreet(1))
+					->setShippingAddress2($shipping->getStreet(2))
+					->setShippingZipCode($shipping->getPostcode())
+					->setShippingCity($shipping->getCity())
+					->setShippingState($shipping->getRegion())
+					->addTransactionType('authorize');
+
+			$genesis->execute();
+
+			if ($genesis->response()->getResponseObject()->status != 'approved') {
+				return false;
+			}
 		}
 		catch (Exception $exception) {
 			$this->debugData($exception->getMessage());
@@ -135,6 +142,12 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
 			$genesis
 				->request()
 					->setUniqueId($unique_id);
+
+			$genesis->execute();
+
+			if ($genesis->response()->getResponseObject()->status != 'approved') {
+				return false;
+			}
 		}
 		catch (Exception $exception) {
 			$this->debugData($exception->getMessage());
