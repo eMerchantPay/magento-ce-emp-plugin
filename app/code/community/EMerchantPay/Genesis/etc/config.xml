@@ -7,11 +7,6 @@
     </modules>
 
     <global>
-       <blocks>
-            <emerchantpay_genesis>
-                <class>EMerchantPay_Genesis_Block</class>
-            </emerchantpay_genesis>
-        </blocks>
 
         <models>
             <emerchantpay_genesis>

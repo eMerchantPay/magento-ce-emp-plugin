@@ -70,12 +70,22 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
     /**
      * Is this payment method suitable for multi-shipping checkout?
      */
-    protected $_canUseForMultishipping  = true;
+    protected $_canUseForMultishipping  = false;
 
     /**
      * Can save credit card information for future processing?
      */
     protected $_canSaveCc = false;
+
+	/**
+	 * Use CcSave as it has the additional Owner field
+	 */
+	protected $_formBlockType = 'payment/form_ccsave';
+
+	/**
+	 * Unique Id
+	 */
+	protected $_genesisTrxUniqueId = 'genesis_trx_unique_id';
 
 	public function __construct() {
 		GenesisConf::setToken(Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_token'));
@@ -88,18 +98,24 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
      *
      * @see examples of transaction specific public methods such as
      * authorize, capture and void in Mage_Paygate_Model_Authorizenet
+     *
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @param String $amount
+     *
+     * @return mixed
      */
 
 	public function authorize(Varien_Object $payment, $amount)
 	{
+		// Make sure transaction is open
+		$payment->setIsTransactionClosed(false);
+
 		$order = $payment->getOrder();
 
 		$billing = $order->getBillingAddress();
 		$shipping = $order->getShippingAddress();
 
 		$genesis = new Genesis('Financial\Authorize');
-
-		$payment->debug();
 
 		try {
 			$genesis
@@ -113,8 +129,8 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 					->setCvv($payment->getCcCid())
 					->setExpirationYear($payment->getCcExpYear())
 					->setExpirationMonth($payment->getCcExpMonth())
-					->setCustomerPhone($order->getCustomerPhone())
 					->setCustomerEmail($order->getCustomerEmail())
+					->setCustomerPhone($billing->getTelephone())
 					->setBillingFirstName($billing->getData('firstname'))
 					->setBillingLastName($billing->getData('lastname'))
 					->setBillingAddress1($billing->getStreet(1))
@@ -137,25 +153,59 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 			if ($genesis->response()->getResponseObject()->status != 'approved') {
 				return false;
 			}
+
+			/*
+			$payment
+				->setAdditionalInformation(
+					$this->_genesisTrxUniqueId,
+					$genesis->response()->getResponseObject()->unique_id
+				);
+
+			$payment
+				->addTransaction(
+					Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+					null,
+					false,
+					null
+				);
+			*/
+
+			$payment->setCcTransId($genesis->response()->getResponseObject()->unique_id);
+
+			/*
+			$payment->setTransactionAdditionalInfo(
+				Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
+				$genesis->response()->getResponseRaw()
+			);
+			*/
 		}
 		catch (Exception $exception) {
 			$this->debugData($exception->getMessage());
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Authorize attempt error!' . 'S' . $payment . 'S' . $exception->getMessage()));
+			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Authorize attempt error!' . $exception->getMessage()));
 		}
 
 		return $this;
 	}
 
-	public function cancel($payment)
+	public function cancel(Varien_Object $payment)
 	{
 		$this->void($payment);
 
 		return $this;
 	}
 
-	public function capture($payment, $amount)
+	/**
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param float $amount
+	 *
+	 * @return $this|Mage_Payment_Model_Abstract
+	 * @throws Mage_Core_Exception
+	 */
+	public function capture(Varien_Object $payment, $amount)
 	{
 		$order = $payment->getOrder();
+
+		$order->getBaseCurrencyCode();
 
 		$genesis = new Genesis('Financial\Capture');
 
@@ -164,7 +214,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 				->request()
 					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
 					->setRemoteIp($_SERVER['REMOTE_ADDR'])
-					->setReferenceId($order->getTransactionId())
+					->setReferenceId($payment->getCcTransId())
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount);
 
@@ -173,20 +223,43 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 			if ($genesis->response()->getResponseObject()->status != 'approved') {
 				return false;
 			}
+
+			$payment->setTransactionId(
+				$genesis->response()->getResponseObject()->unique_id
+			);
+
+			/*
+			$payment->setTransactionAdditionalInfo(
+				$this->_genesisTrxUniqueId,
+				$genesis->response()->getResponseObject()->unique_id
+			);
+
+			$payment->setTransactionAdditionalInfo(
+				Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
+				$genesis->response()->getResponseRaw()
+			);
+			*/
 		}
 		catch (Exception $exception) {
 			$this->debugData($exception->getMessage());
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Capture attempt error!'));
+			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Capture attempt error (' . $exception->getMessage() . ')!'));
 		}
 
 		return $this;
 	}
 
-	public function refund($payment, $amount)
+	/**
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param float $amount
+	 *
+	 * @return $this|Mage_Payment_Model_Abstract
+	 * @throws Mage_Core_Exception
+	 */
+	public function refund(Varien_Object $payment, $amount)
 	{
 		$order = $payment->getOrder();
 
-		if (!$order->getTransctionId()) {
+		if (!$payment->getLastTransId()) {
 			return false;
 		}
 
@@ -197,13 +270,17 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 				->request()
 					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
 					->setRemoteIp($_SERVER['REMOTE_ADDR'])
-					->setReferenceId()
+					->setReferenceId($payment->getLastTransId())
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount);
+
+			$genesis->execute();
 
 			if ($genesis->response()->getResponseObject()->status != 'approved') {
 				return false;
 			}
+
+			$payment->setTransactionId($genesis->response()->getResponseObject()->unique_id);
 		}
 		catch (Exception $exception) {
 			$this->debugData($exception->getMessage());
@@ -213,11 +290,15 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		return $this;
 	}
 
-	public function void($payment)
+	/**
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 *
+	 * @return $this|Mage_Payment_Model_Abstract
+	 * @throws Mage_Core_Exception
+	 */
+	public function void(Varien_Object $payment)
 	{
-		$order = $payment->getOrder();
-
-		if (!$order->getTransctionId()) {
+		if (!$payment->getLastTransId()) {
 			return false;
 		}
 
@@ -228,7 +309,15 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 				->request()
 					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
 					->setRemoteIp($_SERVER['REMOTE_ADDR'])
-					->setReferenceId();
+					->setReferenceId($payment->getLastTransId());
+
+			$genesis->execute();
+
+			if ($genesis->response()->getResponseObject()->status != 'approved') {
+				return false;
+			}
+
+			$payment->setTransactionId($genesis->response()->getResponseObject()->unique_id);
 		}
 		catch (Exception $exception) {
 			$this->debugData($exception->getMessage());
