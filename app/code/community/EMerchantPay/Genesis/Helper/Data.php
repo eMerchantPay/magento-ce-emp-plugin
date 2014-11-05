@@ -29,4 +29,29 @@ class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract {
 	{
 		return strtoupper(md5(microtime(1)));
 	}
+
+	/**
+	 * @param Mage_Sales_Model_Order_Payment $order
+	 */
+	public function getItemList($order)
+	{
+		$productResult = array();
+		foreach ($order->getAllItems() as $item) {
+			/** @var $item Mage_Sales_Model_Quote_Item */
+			$product = $item->getProduct();
+
+			$productResult[$product->getSku()] = array(
+				'sku'   => $product->getSku(),
+				'name'  => $product->getName(),
+				'qty'   => isset($productResult[$product->getSku()]['qty']) ? $productResult[$product->getSku()]['qty'] + 1 : 1,
+			);
+		}
+
+		$description = '';
+		foreach ($productResult as $product) {
+			$description .= sprintf("%s (%s) x %d\r\n", $product['name'], $product['sku'], $product['qty']);
+		}
+
+		return $description;
+	}
 } 

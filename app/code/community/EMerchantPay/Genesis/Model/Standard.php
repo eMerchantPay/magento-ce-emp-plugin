@@ -1,134 +1,96 @@
 <?php
 
-/**
-* Our test CC module adapter
-*/
 require_once Mage::getBaseDir('lib').DS.'Genesis'.DS.'vendor'.DS.'autoload.php';
 
 use \Genesis\Genesis as Genesis;
 use \Genesis\GenesisConfig as GenesisConf;
 
+/**
+ * Genesis Gateway Standard API
+ *
+ * This class requires the user to input
+ * their CC data and as such requires PCI
+ * compliance.
+ *
+ * @see http://magento.com/resources/pci
+ * @extends Mage_Payment_Model_Method_Cc
+ *
+ * @category
+ */
 class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 {
-    /**
-    * unique internal payment method identifier
-    *
-    * @var string [a-z0-9_]
-    */
     protected $_code = 'emerchantpay_genesis';
 
-    /**
-     * Here are examples of flags that will determine functionality availability
-     * of this module to be used by frontend and backend.
-     *
-     * @see all flags and their defaults in Mage_Payment_Model_Method_Abstract
-     *
-     * It is possible to have a custom dynamic logic by overloading
-     * public function can* for each flag respectively
-     */
-
-    /**
-     * Is this payment method a gateway (online auth/charge) ?
-     */
     protected $_isGateway               = true;
-
-    /**
-     * Can authorize online?
-     */
     protected $_canAuthorize            = true;
-
-    /**
-     * Can capture funds online?
-     */
     protected $_canCapture              = true;
-
-    /**
-     * Can capture partial amounts online?
-     */
     protected $_canCapturePartial       = true;
-
-    /**
-     * Can refund online?
-     */
     protected $_canRefund               = true;
-
-    /**
-     * Can void transactions online?
-     */
     protected $_canVoid                 = true;
-
-    /**
-     * Can use this payment method in administration panel?
-     */
     protected $_canUseInternal          = true;
-
-    /**
-     * Can show this payment method as an option on checkout payment page?
-     */
     protected $_canUseCheckout          = true;
 
-    /**
-     * Is this payment method suitable for multi-shipping checkout?
-     */
     protected $_canUseForMultishipping  = false;
-
-    /**
-     * Can save credit card information for future processing?
-     */
-    protected $_canSaveCc = false;
+    protected $_canSaveCc               = false;
 
 	/**
-	 * Use CcSave as it has the additional Owner field
+	 * Use CcSave as it has the additional CcOwner field
 	 */
 	protected $_formBlockType = 'payment/form_ccsave';
 
 	/**
-	 * Unique Id
+	 * Set Genesis API Parameters
 	 */
-	protected $_genesisTrxUniqueId = 'genesis_trx_unique_id';
-
 	public function __construct() {
-		GenesisConf::setToken(Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_token'));
-		GenesisConf::setUsername(Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_username'));
-		GenesisConf::setPassword(Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_password'));
-		GenesisConf::setEnvironment('sandbox');
+		GenesisConf::setToken(
+			Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_token')
+		);
+		GenesisConf::setUsername(
+			Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_username')
+		);
+		GenesisConf::setPassword(
+			Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_password')
+		);
+		GenesisConf::setEnvironment(
+			'sandbox'
+		);
 	}
+
     /**
-     * Here you will need to implement authorize, capture and void public methods
-     *
-     * @see examples of transaction specific public methods such as
-     * authorize, capture and void in Mage_Paygate_Model_Authorizenet
+     * Genesis Authorize Payment Method
      *
      * @param Mage_Sales_Model_Order_Payment $payment
      * @param String $amount
      *
      * @return mixed
      */
-
-	public function authorize(Varien_Object $payment, $amount)
+	public function authorize($payment, $amount)
 	{
-		// Make sure transaction is open
-		$payment->setIsTransactionClosed(false);
-
-		$order = $payment->getOrder();
-
-		$billing = $order->getBillingAddress();
-		$shipping = $order->getShippingAddress();
-
-		$genesis = new Genesis('Financial\Authorize');
-
 		try {
+			$order = $payment->getOrder();
+
+			$billing = $order->getBillingAddress();
+			$shipping = $order->getShippingAddress();
+
+			$transaction_id = Mage::helper('emerchantpay_genesis')->genTransactionId();
+			$remote_address = Mage::helper('core/http')->getRemoteAddr(false);
+
+			$usage = Mage::helper('emerchantpay_genesis')->getItemList();
+
+			$genesis = new Genesis('Financial\Authorize');
+
 			$genesis
 				->request()
-					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp($_SERVER['REMOTE_ADDR'])
+					->setTransactionId($transaction_id)
+					->setRemoteIp($remote_address)
+					->setUsage($usage)
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount)
 					->setCardHolder($payment->getCcOwner())
 					->setCardNumber($payment->getCcNumber())
-					->setCvv($payment->getCcCid())
 					->setExpirationYear($payment->getCcExpYear())
 					->setExpirationMonth($payment->getCcExpMonth())
+					->setCvv($payment->getCcCid())
 					->setCustomerEmail($order->getCustomerEmail())
 					->setCustomerPhone($billing->getTelephone())
 					->setBillingFirstName($billing->getData('firstname'))
@@ -150,140 +112,138 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$genesis->execute();
 
-			if ($genesis->response()->getResponseObject()->status != 'approved') {
-				return false;
+			$response = $genesis->response()->getResponseObject();
+
+			if (!isset($response->status) || $response->status != 'approved') {
+				throw new Exception($response->technical_message);
 			}
 
-			/*
-			$payment
-				->setAdditionalInformation(
-					$this->_genesisTrxUniqueId,
-					$genesis->response()->getResponseObject()->unique_id
-				);
+			$payment->setCcTransId($response->unique_id);
+			$payment->setTransactionId($response->unique_id);
+			$payment->setIsTransactionClosed(false);
 
-			$payment
-				->addTransaction(
-					Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
-					null,
-					false,
-					null
-				);
-			*/
-
-			$payment->setCcTransId($genesis->response()->getResponseObject()->unique_id);
-
-			/*
 			$payment->setTransactionAdditionalInfo(
 				Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
 				$genesis->response()->getResponseRaw()
 			);
-			*/
+
 		}
 		catch (Exception $exception) {
-			$this->debugData($exception->getMessage());
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Authorize attempt error!' . $exception->getMessage()));
+			Mage::logException($exception);
+			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('There was a problem processing your request, please try again or come back later!'));
 		}
-
-		return $this;
-	}
-
-	public function cancel(Varien_Object $payment)
-	{
-		$this->void($payment);
 
 		return $this;
 	}
 
 	/**
+	 * Cancel an order
+	 *
+	 * Before canceling an order, check if there is
+	 * a transaction made previously (auth for example).
+	 * If there is - void it
+	 *
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 *
+	 * @return $this|Mage_Payment_Model_Abstract
+	 */
+	public function cancel($payment)
+	{
+		if ($payment->getCcTransId()) {
+			$this->void($payment);
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Capture a successful auth transaction
+	 *
 	 * @param Mage_Sales_Model_Order_Payment $payment
 	 * @param float $amount
 	 *
 	 * @return $this|Mage_Payment_Model_Abstract
 	 * @throws Mage_Core_Exception
 	 */
-	public function capture(Varien_Object $payment, $amount)
+	public function capture($payment, $amount)
 	{
-		$order = $payment->getOrder();
-
-		$order->getBaseCurrencyCode();
-
-		$genesis = new Genesis('Financial\Capture');
+		if (!$payment->getCcTransId()) {
+			return false;
+		}
 
 		try {
+			$order = $payment->getOrder();
+
+			$genesis = new Genesis('Financial\Capture');
+
 			$genesis
 				->request()
 					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp($_SERVER['REMOTE_ADDR'])
+					->setRemoteIp(Mage::helper('core/http')->getRemoteAddr(false))
 					->setReferenceId($payment->getCcTransId())
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount);
 
 			$genesis->execute();
 
-			if ($genesis->response()->getResponseObject()->status != 'approved') {
-				return false;
+			$response = $genesis->response()->getResponseObject();
+
+			if ($response->status != 'approved') {
+				throw new Exception($response->technical_message);
 			}
 
 			$payment->setTransactionId(
-				$genesis->response()->getResponseObject()->unique_id
+				$response->unique_id
 			);
-
-			/*
-			$payment->setTransactionAdditionalInfo(
-				$this->_genesisTrxUniqueId,
-				$genesis->response()->getResponseObject()->unique_id
-			);
-
-			$payment->setTransactionAdditionalInfo(
-				Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
-				$genesis->response()->getResponseRaw()
-			);
-			*/
 		}
 		catch (Exception $exception) {
-			$this->debugData($exception->getMessage());
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Capture attempt error (' . $exception->getMessage() . ')!'));
+			Mage::logException($exception);
+			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Unsuccessful CAPTURE transaction: (' . $exception->getMessage() . ')!'));
 		}
 
 		return $this;
 	}
 
 	/**
+	 * Refund the last successful transaction
+	 *
 	 * @param Mage_Sales_Model_Order_Payment $payment
 	 * @param float $amount
 	 *
 	 * @return $this|Mage_Payment_Model_Abstract
 	 * @throws Mage_Core_Exception
 	 */
-	public function refund(Varien_Object $payment, $amount)
+	public function refund($payment, $amount)
 	{
-		$order = $payment->getOrder();
-
 		if (!$payment->getLastTransId()) {
 			return false;
 		}
 
-		$genesis = new Genesis('Financial\Refund');
-
 		try{
+			$order = $payment->getOrder();
+
+			$genesis = new Genesis('Financial\Refund');
+
 			$genesis
 				->request()
 					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp($_SERVER['REMOTE_ADDR'])
+					->setRemoteIp(Mage::helper('core/http')->getRemoteAddr(false))
 					->setReferenceId($payment->getLastTransId())
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount);
 
 			$genesis->execute();
 
-			if ($genesis->response()->getResponseObject()->status != 'approved') {
-				return false;
+			$response = $genesis->response()->getResponseObject();
+
+			if ($response->status != 'approved') {
+				throw new Exception($response->technical_message);
 			}
 
-			$payment->setTransactionId($genesis->response()->getResponseObject()->unique_id);
+			$payment->setTransactionId($response->unique_id);
 		}
 		catch (Exception $exception) {
-			$this->debugData($exception->getMessage());
+			Mage::logException($exception);
 			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Refund attempt error!'));
 		}
 
@@ -291,40 +251,41 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	}
 
 	/**
+	 * Void the last successful transaction
+	 *
 	 * @param Mage_Sales_Model_Order_Payment $payment
 	 *
 	 * @return $this|Mage_Payment_Model_Abstract
 	 * @throws Mage_Core_Exception
 	 */
-	public function void(Varien_Object $payment)
+	public function void($payment)
 	{
 		if (!$payment->getLastTransId()) {
 			return false;
 		}
 
-		$genesis = new Genesis('Financial\Void');
-
 		try{
+			$genesis = new Genesis('Financial\Void');
+
 			$genesis
 				->request()
 					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp($_SERVER['REMOTE_ADDR'])
+					->setRemoteIp(Mage::helper('core/http')->getRemoteAddr(false))
 					->setReferenceId($payment->getLastTransId());
 
 			$genesis->execute();
 
 			if ($genesis->response()->getResponseObject()->status != 'approved') {
-				return false;
+				throw new Exception('There was a problem processing your request, please try again or come back later!');
 			}
 
 			$payment->setTransactionId($genesis->response()->getResponseObject()->unique_id);
 		}
 		catch (Exception $exception) {
-			$this->debugData($exception->getMessage());
+			Mage::logException($exception);
 			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Void attempt error!'));
 		}
 
 		return $this;
 	}
 }
-?>

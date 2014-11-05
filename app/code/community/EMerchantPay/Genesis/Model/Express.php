@@ -79,6 +79,9 @@ class EMerchantPay_Genesis_Model_Express extends Mage_Payment_Model_Method_Abstr
 	 *
 	 * @see examples of transaction specific public methods such as
 	 * authorize, capture and void in Mage_Paygate_Model_Authorizenet
+	 *
+	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param String $amount
 	 */
 
 	public function authorize($payment, $amount)
