@@ -114,7 +114,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$response = $genesis->response()->getResponseObject();
 
-			if (!isset($response->status) || $response->status != 'approved') {
+			if ($genesis->response()->isSuccessful()) {
 				throw new Exception($response->technical_message);
 			}
 
@@ -130,7 +130,9 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		}
 		catch (Exception $exception) {
 			Mage::logException($exception);
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('There was a problem processing your request, please try again or come back later!'));
+			Mage::throwException(
+				Mage::helper('emerchantpay_genesis')->__('There was a problem processing your request, please try again or come back later!')
+			);
 		}
 
 		return $this;
@@ -178,8 +180,12 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$genesis
 				->request()
-					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp(Mage::helper('core/http')->getRemoteAddr(false))
+					->setTransactionId(
+						Mage::helper('emerchantpay_genesis')->genTransactionId()
+					)
+					->setRemoteIp(
+						Mage::helper('core/http')->getRemoteAddr(false)
+					)
 					->setReferenceId($payment->getCcTransId())
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount);
@@ -188,7 +194,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$response = $genesis->response()->getResponseObject();
 
-			if ($response->status != 'approved') {
+			if ($genesis->response()->isSuccessful()) {
 				throw new Exception($response->technical_message);
 			}
 
@@ -198,7 +204,9 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		}
 		catch (Exception $exception) {
 			Mage::logException($exception);
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Unsuccessful CAPTURE transaction: (' . $exception->getMessage() . ')!'));
+			Mage::throwException(
+				Mage::helper('emerchantpay_genesis')->__('Unsuccessful CAPTURE transaction!')
+			);
 		}
 
 		return $this;
@@ -226,8 +234,12 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$genesis
 				->request()
-					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp(Mage::helper('core/http')->getRemoteAddr(false))
+					->setTransactionId(
+						Mage::helper('emerchantpay_genesis')->genTransactionId()
+					)
+					->setRemoteIp(
+						Mage::helper('core/http')->getRemoteAddr(false)
+					)
 					->setReferenceId($payment->getLastTransId())
 					->setCurrency($order->getBaseCurrencyCode())
 					->setAmount($amount);
@@ -236,7 +248,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$response = $genesis->response()->getResponseObject();
 
-			if ($response->status != 'approved') {
+			if ($genesis->response()->isSuccessful()) {
 				throw new Exception($response->technical_message);
 			}
 
@@ -244,7 +256,9 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		}
 		catch (Exception $exception) {
 			Mage::logException($exception);
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Refund attempt error!'));
+			Mage::throwException(
+				Mage::helper('emerchantpay_genesis')->__('Refund attempt error!')
+			);
 		}
 
 		return $this;
@@ -269,13 +283,17 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$genesis
 				->request()
-					->setTransactionId(Mage::helper('emerchantpay_genesis')->genTransactionId())
-					->setRemoteIp(Mage::helper('core/http')->getRemoteAddr(false))
+					->setTransactionId(
+						Mage::helper('emerchantpay_genesis')->genTransactionId()
+					)
+					->setRemoteIp(
+						Mage::helper('core/http')->getRemoteAddr(false)
+					)
 					->setReferenceId($payment->getLastTransId());
 
 			$genesis->execute();
 
-			if ($genesis->response()->getResponseObject()->status != 'approved') {
+			if ($genesis->response()->isSuccessful()) {
 				throw new Exception('There was a problem processing your request, please try again or come back later!');
 			}
 

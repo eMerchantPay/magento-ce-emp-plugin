@@ -1,6 +1,7 @@
 <?php
 
-class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract {
+class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
+{
 	public function getSuccessURL() {
 		return Mage::getUrl( 'checkout/success', array( '_secure' => true ) );
 	}
@@ -12,7 +13,7 @@ class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract {
 
 	public function getCancelURL()
 	{
-		return Mage::getUrl( 'emerchantpay/genesis/error', array( '_secure' => true ) );
+		return Mage::getUrl( 'emerchantpay/genesis/cacncel', array( '_secure' => true ) );
 	}
 
 	public function getNotifyURL()
@@ -20,18 +21,34 @@ class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract {
 		return Mage::getUrl( 'emerchantpay/genesis/nofify/', array( '_secure' => true ) );
 	}
 
+	/**
+	 * Get Module Configuration Key
+	 *
+	 * @param $key string The key you want to retrieve
+	 *
+	 * @return mixed The content of the requested key
+	 */
 	public function getConfigVal($key)
 	{
 		return Mage::getStoreConfig( 'payment/emerchantpay_genesis/' . $key );
 	}
 
+	/**
+	 * Generate Transaction Id
+	 *
+	 * @return string
+	 */
 	public function genTransactionId()
 	{
 		return strtoupper(md5(microtime(1)));
 	}
 
 	/**
+	 * Get list of items in the order
+	 *
 	 * @param Mage_Sales_Model_Order_Payment $order
+	 *
+	 * @return string Formatted List of Items
 	 */
 	public function getItemList($order)
 	{

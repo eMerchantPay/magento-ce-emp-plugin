@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition* > 1.7
-* GenesisPHP 1.0
+* GenesisPHP 1.0.1
 
 *Note: this module has been tested only with Magento Community Edition, it may not work
 as intended with Magento Enterprise Edition
@@ -15,9 +15,8 @@ as intended with Magento Enterprise Edition
 GenesisPHP Requirements
 ------------
 
-* PHP version >= 5.3 (however since 5.3 is EoL, we recommend at least PHP v5.4)
-* PHP with libxml
-* PHP ext: cURL (optionally you can use StreamContext)
+* PHP >= 5.3 (built w/ libxml)
+* PHP Extensions: cURL (optionally you can use Streams, but its not recommended on PHP < 5.6)
 * Composer
 
 
@@ -27,7 +26,7 @@ Installation (auto)
 * Install [ModMan]
 * Navigate to the root of your Magento installation
 * run `modman init`
-* and clone this repo `modman clone https://github.com/REPO_URL`
+* and clone this repo `modman clone https://github.com/E-ComProcessing/genesis_php`
 * Login inside the Admin Panel and go to System -> Configuration -> Payment Methods
 * Check "Enable" and set the correct credentials, select your prefered payment method and click "Save config"
 
