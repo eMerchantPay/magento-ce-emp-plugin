@@ -1,3 +1,0 @@
-[submodule "lib/Genesis"]
-	path = lib/Genesis
-	url = git@github.com:E-ComProcessing/genesis_php.git

@@ -43,7 +43,7 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </genesis_password>
-                        <genesis_enviornment translate="label">
+                        <genesis_environment translate="label">
                             <label>Test Mode</label>
                             <comment>
                                 If enabled, your requests are forwarded to our staging server and no money are being transferred. Ideal for initial setup.
@@ -54,15 +54,7 @@
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </genesis_enviornment>
-                        <order_status translate="label">
-                            <label>New order status</label>
-                            <frontend_type>select</frontend_type>
-                            <sort_order>6</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </order_status>
+                        </genesis_environment>
                     </fields>
                 </emerchantpay_genesis>
             </groups>

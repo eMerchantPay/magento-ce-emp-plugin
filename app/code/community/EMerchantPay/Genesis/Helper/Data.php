@@ -2,25 +2,6 @@
 
 class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 {
-	public function getSuccessURL() {
-		return Mage::getUrl( 'checkout/success', array( '_secure' => true ) );
-	}
-
-	public function getFailureURL()
-	{
-		return Mage::getUrl( 'checkout/failure', array( '_secure' => true ) );
-	}
-
-	public function getCancelURL()
-	{
-		return Mage::getUrl( 'emerchantpay/genesis/cacncel', array( '_secure' => true ) );
-	}
-
-	public function getNotifyURL()
-	{
-		return Mage::getUrl( 'emerchantpay/genesis/nofify/', array( '_secure' => true ) );
-	}
-
 	/**
 	 * Get Module Configuration Key
 	 *
@@ -40,7 +21,7 @@ class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	 */
 	public function genTransactionId()
 	{
-		return strtoupper(md5(microtime(1)));
+		return strtoupper(md5(microtime(true) . ':' . mt_rand()));
 	}
 
 	/**
@@ -65,6 +46,7 @@ class EMerchantpay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 		}
 
 		$description = '';
+
 		foreach ($productResult as $product) {
 			$description .= sprintf("%s (%s) x %d\r\n", $product['name'], $product['sku'], $product['qty']);
 		}

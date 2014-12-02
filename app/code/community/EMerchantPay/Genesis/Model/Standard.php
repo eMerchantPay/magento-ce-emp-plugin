@@ -42,6 +42,8 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 * Set Genesis API Parameters
 	 */
 	public function __construct() {
+		$environment = intval(Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_environment')) == 1 ? 'sandbox' : 'production';
+
 		GenesisConf::setToken(
 			Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_token')
 		);
@@ -52,7 +54,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 			Mage::helper('emerchantpay_genesis')->getConfigVal('genesis_password')
 		);
 		GenesisConf::setEnvironment(
-			'sandbox'
+			$environment
 		);
 	}
 
@@ -75,7 +77,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 			$transaction_id = Mage::helper('emerchantpay_genesis')->genTransactionId();
 			$remote_address = Mage::helper('core/http')->getRemoteAddr(false);
 
-			$usage = Mage::helper('emerchantpay_genesis')->getItemList();
+			$usage = Mage::helper('emerchantpay_genesis')->getItemList($order);
 
 			$genesis = new Genesis('Financial\Authorize');
 
@@ -114,7 +116,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$response = $genesis->response()->getResponseObject();
 
-			if ($genesis->response()->isSuccessful()) {
+			if (!$genesis->response()->isSuccessful()) {
 				throw new Exception($response->technical_message);
 			}
 
@@ -131,7 +133,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		catch (Exception $exception) {
 			Mage::logException($exception);
 			Mage::throwException(
-				Mage::helper('emerchantpay_genesis')->__('There was a problem processing your request, please try again or come back later!')
+				Mage::helper('emerchantpay_genesis')->__('Payment attempt failed. Check your input or trying again later.')
 			);
 		}
 
@@ -194,7 +196,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$response = $genesis->response()->getResponseObject();
 
-			if ($genesis->response()->isSuccessful()) {
+			if (!$genesis->response()->isSuccessful()) {
 				throw new Exception($response->technical_message);
 			}
 
@@ -205,7 +207,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		catch (Exception $exception) {
 			Mage::logException($exception);
 			Mage::throwException(
-				Mage::helper('emerchantpay_genesis')->__('Unsuccessful CAPTURE transaction!')
+				Mage::helper('emerchantpay_genesis')->__('Unsuccessful Capture transaction!')
 			);
 		}
 
@@ -248,7 +250,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$response = $genesis->response()->getResponseObject();
 
-			if ($genesis->response()->isSuccessful()) {
+			if (!$genesis->response()->isSuccessful()) {
 				throw new Exception($response->technical_message);
 			}
 
@@ -257,7 +259,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		catch (Exception $exception) {
 			Mage::logException($exception);
 			Mage::throwException(
-				Mage::helper('emerchantpay_genesis')->__('Refund attempt error!')
+				Mage::helper('emerchantpay_genesis')->__('Unsuccessful Refund transaction!')
 			);
 		}
 
@@ -293,7 +295,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 
 			$genesis->execute();
 
-			if ($genesis->response()->isSuccessful()) {
+			if (!$genesis->response()->isSuccessful()) {
 				throw new Exception('There was a problem processing your request, please try again or come back later!');
 			}
 
@@ -301,7 +303,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		}
 		catch (Exception $exception) {
 			Mage::logException($exception);
-			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Void attempt error!'));
+			Mage::throwException(Mage::helper('emerchantpay_genesis')->__('Unsuccessful Void transaction!'));
 		}
 
 		return $this;
