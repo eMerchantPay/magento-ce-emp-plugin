@@ -1,6 +1,6 @@
 <?php
 
-class EMerchantPay_Genesis_Model_Admin_TransactionType
+class EMerchantPay_Genesis_Model_Admin_Transaction_Type
 {
 	public function toOptionArray()
 	{

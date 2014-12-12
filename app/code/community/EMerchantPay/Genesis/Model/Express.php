@@ -32,7 +32,7 @@ class EMerchantPay_Genesis_Model_Express extends Mage_Payment_Model_Method_Abstr
 	 *
 	 * @return mixed
 	 */
-	public function authorize($payment, $amount)
+	public function authorize(Varien_Object $payment, $amount)
 	{
 		try {
 			$this->getHelper()->initClient();

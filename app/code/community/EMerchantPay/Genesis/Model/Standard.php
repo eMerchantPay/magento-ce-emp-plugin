@@ -78,7 +78,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 *
 	 * @return mixed
 	 */
-	public function authorize($payment, $amount)
+	public function authorize(Varien_Object $payment, $amount)
 	{
 		if ($this->is3dEnabled()) {
 			return $this->_authorize3d($payment, $amount);
@@ -96,7 +96,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 *
 	 * @return mixed
 	 */
-	public function capture($payment, $amount)
+	public function capture(Varien_Object $payment, $amount)
 	{
 		if ($payment->getCcTransId()) {
 			return $this->_capture($payment, $amount);
@@ -518,7 +518,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 *
 	 * @return $this
 	 */
-	public function refund($payment, $amount)
+	public function refund(Varien_Object $payment, $amount)
 	{
 		Mage::log('Refund transaction for Order#' . $payment->getOrder()->getIncrementId());
 
@@ -571,7 +571,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 *
 	 * @return mixed
 	 */
-	public function void($payment)
+	public function void(Varien_Object $payment)
 	{
 		try{
 			$this->getHelper()->initClient();
