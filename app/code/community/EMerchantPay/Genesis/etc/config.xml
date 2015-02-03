@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+       <EMerchantPay_Genesis>
+         <version>1.0.0</version>
+       </EMerchantPay_Genesis>
+    </modules>
+
+    <global>
+        <blocks>
+            <emerchantpay>
+                <class>EMerchantPay_Genesis_Block</class>
+            </emerchantpay>
+        </blocks>
+
+        <models>
+            <emerchantpay>
+                <class>EMerchantPay_Genesis_Model</class>
+            </emerchantpay>
+        </models>
+
+        <helpers>
+            <emerchantpay>
+                <class>EMerchantPay_Genesis_Helper</class>
+            </emerchantpay>
+        </helpers>
+
+        <payment>
+            <groups>
+                <emerchantpay>eMerchantPay Ltd.</emerchantpay>
+            </groups>
+        </payment>
+    </global>
+
+    <frontend>
+        <routers>
+            <emerchantpay>
+                <use>standard</use>
+                <args>
+                    <module>EMerchantPay_Genesis</module>
+                    <frontName>emerchantpay</frontName>
+                </args>
+            </emerchantpay>
+        </routers>
+    </frontend>
+
+    <default>
+        <payment>
+            <emerchantpay_standard>
+                <model>emerchantpay/standard</model>
+                <order_status>pending</order_status>
+                <title>Credit Card (eMerchantPay)</title>
+                <payment_action>capture</payment_action>
+                <cctypes>VI,MC</cctypes>
+                <payment_action>authorize</payment_action>
+                <group>emerchantpay</group>
+            </emerchantpay_standard>
+            <!--
+            <emerchantpay_express>
+                <model>emerchantpay/express</model>
+                <order_status>pending</order_status>
+                <title>Credit Card (eMerchantPay Express)</title>
+                <cctypes>VI,MC</cctypes>
+                <payment_action>authorize</payment_action>
+                <group>emerchantpay</group>
+            </emerchantpay_express>
+            -->
+         </payment>
+    </default>
+</config>
