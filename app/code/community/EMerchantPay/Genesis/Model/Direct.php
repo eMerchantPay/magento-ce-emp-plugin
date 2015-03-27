@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Genesis Gateway Standard API
+ * eMerchantPay Direct Payment Method
  *
  * This class requires the user to input
  * their CC data and as such requires PCI
@@ -12,14 +12,14 @@
  *
  * @category
  */
-class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
+class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 {
 	// Variables
-    protected $_code = 'emerchantpay_standard';
+    protected $_code = 'emerchantpay_direct';
 
-	//protected $_formBlockType = 'emerchantpay/form_standard';
+	//protected $_formBlockType = 'emerchantpay/form_direct';
 	protected $_formBlockType = 'payment/form_ccsave';
-	protected $_infoBlockType = 'emerchantpay/info_standard';
+	protected $_infoBlockType = 'emerchantpay/info_direct';
 
 	// Configurations
     protected $_isGateway               = true;
@@ -57,7 +57,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 */
 	public function getConfigPaymentAction()
 	{
-		switch($this->getConfigData('genesis_trx_type')) {
+		switch($this->getConfigData('genesis_type')) {
 			default:
 			case self::GENESIS_TRANSACTION_AUTHORIZE:
 			case self::GENESIS_TRANSACTION_AUTHORIZE3D:
@@ -124,7 +124,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		Mage::log('Authorize transaction for Order#' . $payment->getOrder()->getIncrementId());
 
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$order      = $payment->getOrder();
 
@@ -207,7 +207,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		Mage::log('Authorize 3D-Secure transaction for Order#' . $payment->getOrder()->getIncrementId());
 
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$order      = $payment->getOrder();
 
@@ -246,9 +246,9 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 					->setShippingCity($shipping->getCity())
 					->setShippingState($shipping->getRegion())
 					->setShippinCountry($shipping->getCountry())
-					->setNotificationUrl($this->getHelper()->getNotifyURL('standard'))
-					->setReturnSuccessUrl($this->getHelper()->getSuccessURL('standard'))
-					->setReturnFailureUrl($this->getHelper()->getFailureURL('standard'));;
+					->setNotificationUrl($this->getHelper()->getNotifyURL('direct'))
+					->setReturnSuccessUrl($this->getHelper()->getSuccessURL('direct'))
+					->setReturnFailureUrl($this->getHelper()->getFailureURL('direct'));;
 
 			$genesis->execute();
 
@@ -268,7 +268,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 			        ->setPreparedMessage('3D-Secure: Init.');
 
 			// Save the redirect url with our
-			Mage::getSingleton('core/session')->setEmerchantPayStandardRedirectUrl(
+			Mage::getSingleton('core/session')->setEmerchantPayDirectRedirectUrl(
 				strval($genesis->response()->getResponseObject()->redirect_url)
 			);
 		}
@@ -295,7 +295,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		Mage::log('Sale transaction for Order#' . $payment->getOrder()->getIncrementId());
 
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$order      = $payment->getOrder();
 
@@ -376,7 +376,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		Mage::log('Sale 3D-Secure transaction for Order#' . $payment->getOrder()->getIncrementId());
 
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$order      = $payment->getOrder();
 
@@ -415,9 +415,9 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 					->setShippingCity($shipping->getCity())
 					->setShippingState($shipping->getRegion())
 					->setShippinCountry($shipping->getCountry())
-					->setNotificationUrl($this->getHelper()->getNotifyURL('standard'))
-					->setReturnSuccessUrl($this->getHelper()->getSuccessURL('standard'))
-					->setReturnFailureUrl($this->getHelper()->getFailureURL('standard'));
+					->setNotificationUrl($this->getHelper()->getNotifyURL('direct'))
+					->setReturnSuccessUrl($this->getHelper()->getSuccessURL('direct'))
+					->setReturnFailureUrl($this->getHelper()->getFailureURL('direct'));
 
 			$genesis->execute();
 
@@ -438,7 +438,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 					->setPreparedMessage($this->getHelper()->__('3D-Secure: Init.'));
 
 			// Save the redirect url with our
-			Mage::getSingleton('core/session')->setEmerchantPayStandardRedirectUrl(
+			Mage::getSingleton('core/session')->setEmerchantPayDirectRedirectUrl(
 				strval($genesis->response()->getResponseObject()->redirect_url)
 			);
 		}
@@ -466,7 +466,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		Mage::log('Capture transaction for Order#' . $payment->getOrder()->getIncrementId());
 
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$order = $payment->getOrder();
 
@@ -523,7 +523,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 		Mage::log('Refund transaction for Order#' . $payment->getOrder()->getIncrementId());
 
 		try{
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$genesis = new \Genesis\Genesis('Financial\Refund');
 
@@ -574,7 +574,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	public function void(Varien_Object $payment)
 	{
 		try{
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$genesis = new \Genesis\Genesis('Financial\Void');
 
@@ -616,7 +616,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Reconcile (Get Transaction) from Genesis Gateway
 	 *
-	 * @see EMerchantPay_Genesis_StandardController::notifyAction
+	 * @see EMerchantPay_Genesis_DirectController::notifyAction
 	 *
 	 * @param $unique_id
 	 * @return mixed
@@ -624,7 +624,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	public function reconcile($unique_id)
 	{
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			$genesis = new \Genesis\Genesis('Reconcile\Transaction');
 
@@ -656,7 +656,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	public function processAuthNotification($reconcile)
 	{
 		try {
-			$this->getHelper()->initClient();
+			$this->getHelper()->initClient($this->getCode());
 
 			list($increment_id, $salt) = explode('-', $reconcile->transaction_id);
 
@@ -839,16 +839,16 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Get URL to "Redirect" block
 	 *
-	 * @see EMerchantPay_Genesis_StandardController
+	 * @see EMerchantPay_Genesis_DirectController
 	 *
 	 * @note In order for redirect to work, you must
-	 * set the session variable "EmerchantPayGenesisStandardRedirectUrl"
+	 * set the session variable "EmerchantPayGenesisDirectRedirectUrl"
 	 *
 	 * @return mixed
 	 */
 	public function getOrderPlaceRedirectUrl() {
 		if ($this->is3dEnabled()) {
-			return $this->getHelper()->getRedirectUrl( 'standard' );
+			return $this->getHelper()->getRedirectUrl( 'direct' );
 		}
 	}
 
@@ -862,7 +862,7 @@ class EMerchantPay_Genesis_Model_Standard extends Mage_Payment_Model_Method_Cc
 	 */
 	private function is3dEnabled()
 	{
-		return (stripos($this->getConfigData('genesis_trx_type'), '3d') === false) ? false : true;
+		return (stripos($this->getConfigData('genesis_type'), '3d') === false) ? false : true;
 	}
 
 	/**

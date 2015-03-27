@@ -1,6 +1,6 @@
 <?php
 
-class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_Action
+class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front_Action
 {
 	/**
 	 * Process an incoming Genesis Notification
@@ -8,7 +8,7 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 	 * use the reconcile data to save details
 	 * about the transaction
 	 *
-	 * @see Genesis_API_Documentation \ notification_url
+	 * @see Genesis_API_Documentation notification_url
 	 *
 	 * @return void
 	 */
@@ -21,34 +21,31 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 
 		/** @var EMerchantPay_Genesis_Helper_Data $helper */
 		$helper     = Mage::helper('emerchantpay');
-		/** @var EMerchantPay_Genesis_Model_Standard $standard */
-		$standard   = Mage::getModel('emerchantpay/express');
+		/** @var EMerchantPay_Genesis_Model_Checkout $checkout */
+		$checkout   = Mage::getModel('emerchantpay/checkout');
 
 		try {
-			$helper->initClient();
+			$helper->initClient($checkout->getCode());
 
 			$notification = new \Genesis\API\Notification();
 			$notification->parseNotification( $this->getRequest()->getPost() );
 
 			if ( $notification->isAuthentic() ) {
-				$reconcile = $standard->reconcile($notification->getParsedNotification()->wpf_unique_id);
+                /** @var stdClass $reconcile */
+				$reconcile = $checkout->reconcile($notification->getParsedNotification()->wpf_unique_id);
 
-				if (isset($reconcile->payment_transaction->status) && !empty($reconcile->payment_transaction->status)) {
+				if (isset($reconcile->payment_transaction)) {
 
-					// Process the notification based on its type
 					switch($reconcile->payment_transaction->transaction_type) {
 						case 'authorize':
 						case 'authorize3d':
-							// Authorization workflow completion
-							$status = $standard->processAuthNotification($reconcile->payment_transaction);
+							$status = $checkout->processAuthNotification($reconcile->payment_transaction);
 							break;
 						case 'sale':
 						case 'sale3d':
-							// Sale (Auth/Capture) workflow completion
-							$status = $standard->processAuthCaptureNotification($reconcile->payment_transaction);
+							$status = $checkout->processAuthCaptureNotification($reconcile->payment_transaction);
 							break;
 						default:
-							// Unsupported transaction type
 							$status = false;
 							break;
 					}
@@ -67,7 +64,7 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 	}
 
 	/**
-	 * When a customer chooses eMerchantPay Express on
+	 * When a customer chooses eMerchantPay Checkout on
 	 * Checkout/Payment page, show them a "transition"
 	 * page where you notify them, that they will be
 	 * redirected to a new website.
@@ -79,12 +76,14 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 	public function redirectAction()
 	{
 		$session = Mage::getSingleton('checkout/session');
-		$session->setEmerchantPayExpressQuoteId($session->getQuoteId());
+		$session->setEmerchantPayCheckoutQuoteId($session->getQuoteId());
+
 		$this->getResponse()->setBody(
-			$this->getLayout()->createBlock('emerchantpay/redirect_express')->toHtml()
+			$this->getLayout()->createBlock('emerchantpay/redirect_checkout')->toHtml()
 		);
+
 		$session->unsQuoteId();
-		$session->unsEmerchantPayExpressRedirectUrl();
+		$session->unsEmerchantPayCheckoutRedirectUrl();
 	}
 
 	/**
@@ -94,14 +93,16 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 	 * the user, but wait for the Notification to
 	 * complete the order.
 	 *
-	 * @see Genesis_API_Documentation \ return_success_url
+	 * @see Genesis_API_Documentation return_success_url
 	 *
 	 * @return void
 	 */
 	public function successAction()
 	{
+        Mage::helper('emerchantpay')->redirectIfNotLoggedIn();
+
 		$session = Mage::getSingleton('checkout/session');
-		$session->setQuoteId($session->getEmerchantPayExpressQuoteId(true));
+		$session->setQuoteId($session->getEmerchantPayCheckoutQuoteId(true));
 		Mage::getSingleton('checkout/session')->getQuote()->setIsActive(false)->save();
 		$this->_redirect('checkout/onepage/success', array('_secure'=>true));
 	}
@@ -109,20 +110,24 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 	/**
 	 * Customer action when the transaction failed.
 	 *
-	 * @see Genesis_API_Documentation \ return_failure_url
+	 * @see Genesis_API_Documentation return_failure_url
 	 *
 	 * @return void
 	 */
 	public function failureAction()
 	{
-		$helper = Mage::helper('emerchantpay');
-		$session = Mage::getSingleton('checkout/session');
+        $helper = Mage::helper('emerchantpay');
+        $helper->redirectIfNotLoggedIn();
 
-		$session->setQuoteId($session->getEmerchantPayExpressQuoteId(true));
+		$session = Mage::getSingleton('checkout/session');
+		$session->setQuoteId($session->getEmerchantPayCheckoutQuoteId(true));
+
 		Mage::getSingleton('checkout/session')->getQuote()->setIsActive(true)->save();
+
 		Mage::getSingleton('core/session')->addError(
 			$helper->__('We were unable to process your payment. Please check your input or try again later')
 		);
+
 		$this->_redirect('checkout/cart', array('_secure'=>true));
 	}
 
@@ -131,21 +136,26 @@ class EMerchantPay_Genesis_ExpressController extends Mage_Core_Controller_Front_
 	 * transaction. Just Mark the order as canceled
 	 * and go back to the Cart.
 	 *
-	 * @see Genesis_API_Documentation \ return_cancel_url
+	 * @see Genesis_API_Documentation return_cancel_url
 	 *
 	 * @return void
 	 */
 	public function cancelAction()
 	{
-		$session = Mage::getSingleton('checkout/session');
-		$session->setQuoteId($session->getEmerchantPayExpressQuoteId(true));
+        $helper = Mage::helper('emerchantpay');
+        $helper->redirectIfNotLoggedIn();
+
+        $session = Mage::getSingleton('checkout/session');
+		$session->setQuoteId($session->getEmerchantPayCheckoutQuoteId(true));
+
 		if ($session->getLastRealOrderId()) {
 			$order = Mage::getModel('sales/order')->loadByIncrementId($session->getLastRealOrderId());
 			if ($order->getId()) {
 				$order->cancel()->save();
 			}
-			Mage::helper('emerchantpay')->restoreQuote();
+			$helper->restoreQuote();
 		}
+
 		$this->_redirect('checkout/cart');
 	}
 }

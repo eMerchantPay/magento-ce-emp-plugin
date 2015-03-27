@@ -1,19 +1,19 @@
 <?php
 
-class EMerchantPay_Genesis_Block_Redirect_Express extends Mage_Core_Block_Abstract
+class EMerchantPay_Genesis_Block_Redirect_Direct extends Mage_Core_Block_Abstract
 {
 	public function _toHtml()
 	{
-		$target = Mage::getSingleton('core/session')->getEmerchantPayExpressRedirectUrl();
+		$target = Mage::getSingleton('core/session')->getEmerchantPayDirectRedirectUrl();
 
 		$form = new Varien_Data_Form();
 
 		$form
 			->setAction($target)
-			     ->setId('emerchantpay_redirect_notification')
-			     ->setName('emerchantpay_redirect_notification')
-			     ->setMethod('POST')
-			     ->setUseContainer(true);
+			->setId('emerchantpay_redirect_notification')
+			->setName('emerchantpay_redirect_notification')
+			->setMethod('POST')
+			->setUseContainer(true);
 
 		$button_id = sprintf('redirect_to_dest_%s', Mage::helper('core')->uniqHash());
 
@@ -28,7 +28,7 @@ class EMerchantPay_Genesis_Block_Redirect_Express extends Mage_Core_Block_Abstra
 		$html = "<!DOCTYPE html>\n";
 
 		$html.= '<html><head>';
-		$html.= '<title>' . $this->__('Express Payment Redirect') . '</title>';
+		$html.= '<title>' . $this->__('Payment Redirect') . '</title>';
 		$html.= '<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">';
 		$html.= '<style>html,body{margin:0;padding:0;width:100%;height:100%;display:table;}.wrapper{display:table-cell;vertical-align:middle;text-align:center;}.notice{padding:16px;}</style>';
 		$html.= '</head><body>';

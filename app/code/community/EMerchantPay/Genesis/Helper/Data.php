@@ -5,33 +5,49 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	/**
 	 * Check whether Genesis is initialized and init if not
 	 *
-	 * @see EMerchantpay_Genesis_Helper_Data::bootstrap
-	 * @todo Remove hard-coded module settings
-	 *
 	 * @return void
 	 */
-	public function initClient() {
-		if (!class_exists('\Genesis\Genesis')) {
+	public function initClient($model)
+    {
+		// Mitigate PHP Bug #52339, as Magento already registers their AutoLoader
+		if (!class_exists('\Genesis\Genesis', false)) {
 			include Mage::getBaseDir( 'lib' ) . DS . 'Genesis' . DS . 'vendor' . DS . 'autoload.php';
 
-			\Genesis\GenesisConfig::setToken( $this->getConfigVal( 'genesis_token', 'emerchantpay_standard' ) );
-			\Genesis\GenesisConfig::setUsername( $this->getConfigVal( 'genesis_username', 'emerchantpay_standard' ) );
-			\Genesis\GenesisConfig::setPassword( $this->getConfigVal( 'genesis_password', 'emerchantpay_standard' ) );
+			\Genesis\GenesisConfig::setUsername( $this->getConfigData( $model, 'genesis_username' ) );
+            \Genesis\GenesisConfig::setPassword( $this->getConfigData( $model, 'genesis_password' ) );
 
-			$environment = intval( $this->getConfigVal( 'genesis_environment', 'emerchantpay_standard' ) ) == 1 ? 'sandbox' : 'production';
+            if ('emerchantpay_direct' == $model) {
+                \Genesis\GenesisConfig::setToken( $this->getConfigData( $model, 'genesis_token' ) );
+            }
 
-			\Genesis\GenesisConfig::setEnvironment( $environment );
+			\Genesis\GenesisConfig::setEnvironment( $this->getConfigData($model, 'genesis_environment') );
 		}
 	}
+
+    /**
+     * Get Module Configuration Key
+     *
+     * @param string $model Name of the Model
+     * @param string $key   Configuration Key
+     *
+     * @return mixed The content of the requested key
+     */
+    public function getConfigData($model, $key)
+    {
+        return Mage::getStoreConfig( sprintf('payment/%s/%s', $model, $key) );
+    }
 
 	/**
 	 * Get A Success URL
 	 *
 	 * @see Genesis API Documentation
+     *
+     * @param string $model Name of the Model (Checkout/Direct)
 	 *
 	 * @return string
 	 */
-	public function getSuccessURL($model) {
+	public function getSuccessURL($model)
+    {
 		return Mage::getUrl( sprintf('emerchantpay/%s/success', $model), array( '_secure' => true ) );
 	}
 
@@ -39,6 +55,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	 * Get A Failure URL
 	 *
 	 * @see Genesis API Documentation
+     *
+     * @param string $model Name of the Model (Checkout/Direct)
 	 *
 	 * @return string
 	 */
@@ -51,6 +69,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	 * Get A Cancel URL
 	 *
 	 * @see Genesis API Documentation
+     *
+     * @param string $model Name of the Model (Checkout/Direct)
 	 *
 	 * @return string
 	 */
@@ -63,6 +83,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	 * Get A Notification URL
 	 *
 	 * @see Genesis API Documentation
+     *
+     * @param string $model Name of the Model (Checkout/Direct)
 	 *
 	 * @return string
 	 */
@@ -74,25 +96,13 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	/**
 	 * Get a Redirect URL for the module
 	 *
-	 * @param $model
+	 * @param string $model Name of the Model (Checkout/Direct)
 	 *
 	 * @return string
 	 */
 	public function getRedirectUrl($model)
 	{
 		return Mage::getUrl( sprintf('emerchantpay/%s/redirect', $model), array( '_secure' => true ) );
-	}
-
-	/**
-	 * Get Module Configuration Key
-	 *
-	 * @param $key string The key you want to retrieve
-	 *
-	 * @return mixed The content of the requested key
-	 */
-	public function getConfigVal($key, $code)
-	{
-		return Mage::getStoreConfig( 'payment/' . $code . '/' . $key );
 	}
 
 	/**
@@ -106,6 +116,34 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 		return sprintf('%s-%s', $order_id, strtoupper(md5(microtime(true) . ':' . mt_rand())));
 	}
 
+    /**
+     * During "Checkout" we don't know have a Token,
+     * however its required at a latter stage, which
+     * means we have to extract it from the payment
+     * data. We save the token when we receive a
+     * notification from Genesis, then we only have
+     * to find the earliest payment_transaction
+     *
+     * @param Mage_Sales_Model_Order_Payment $payment
+     *
+     * @return void
+     */
+    public function setTokenFromPaymentTransaction($payment)
+    {
+        $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
+                          ->setOrderFilter($payment->getOrder())
+                          ->setOrder('created_at', Varien_Data_Collection::SORT_ORDER_ASC)
+                          ->setLimit(1);
+
+        foreach ($collection as $payment_transaction) {
+            $token = $payment_transaction->getTransactionAdditionalInfo('token');
+
+            if (isset($token) && !empty($token)) {
+                \Genesis\GenesisConfig::setToken( $token );
+            }
+        }
+    }
+
 	/**
 	 * Get list of items in the order
 	 *
@@ -118,6 +156,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	public function getItemList($order)
 	{
 		$productResult = array();
+
 		foreach ($order->getAllItems() as $item) {
 			/** @var $item Mage_Sales_Model_Quote_Item */
 			$product = $item->getProduct();
@@ -125,7 +164,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 			$productResult[$product->getSku()] = array(
 				'sku'   => $product->getSku(),
 				'name'  => $product->getName(),
-				'qty'   => isset($productResult[$product->getSku()]['qty']) ? $productResult[$product->getSku()]['qty'] + 1 : 1,
+				'qty'   => isset($productResult[$product->getSku()]['qty']) ? $productResult[$product->getSku()]['qty'] : 1,
 			);
 		}
 
@@ -137,4 +176,21 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 
 		return $description;
 	}
+
+    /**
+     * Redirect the visitor to the login page if
+     * they are not logged in
+     *
+     * @return void
+     */
+    public function redirectIfNotLoggedIn($target = '')
+    {
+        if(!Mage::helper('customer')->isLoggedIn()){
+            $login = empty($target) ? Mage::getUrl('customer/account/login', array( '_secure' => true )) : $target;
+
+            Mage::app()->getFrontController()->getResponse()->setRedirect($login)->sendHeaders();
+
+            exit(0);
+        }
+    }
 } 
