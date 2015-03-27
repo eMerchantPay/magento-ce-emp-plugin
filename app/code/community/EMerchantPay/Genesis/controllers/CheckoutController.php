@@ -75,6 +75,7 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
 	 */
 	public function redirectAction()
 	{
+        /** @var Mage_Core_Model_Session $target */
 		$session = Mage::getSingleton('checkout/session');
 		$session->setEmerchantPayCheckoutQuoteId($session->getQuoteId());
 
@@ -99,8 +100,11 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
 	 */
 	public function successAction()
 	{
-        Mage::helper('emerchantpay')->redirectIfNotLoggedIn();
+        /** @var EMerchantPay_Genesis_Helper_Data $helper */
+        $helper = Mage::helper('emerchantpay');
+        $helper->redirectIfNotLoggedIn();
 
+        /** @var Mage_Core_Model_Session $target */
 		$session = Mage::getSingleton('checkout/session');
 		$session->setQuoteId($session->getEmerchantPayCheckoutQuoteId(true));
 		Mage::getSingleton('checkout/session')->getQuote()->setIsActive(false)->save();
@@ -116,9 +120,11 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
 	 */
 	public function failureAction()
 	{
+        /** @var EMerchantPay_Genesis_Helper_Data $helper */
         $helper = Mage::helper('emerchantpay');
         $helper->redirectIfNotLoggedIn();
 
+        /** @var Mage_Core_Model_Session $target */
 		$session = Mage::getSingleton('checkout/session');
 		$session->setQuoteId($session->getEmerchantPayCheckoutQuoteId(true));
 
@@ -142,9 +148,11 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
 	 */
 	public function cancelAction()
 	{
+        /** @var EMerchantPay_Genesis_Helper_Data $helper */
         $helper = Mage::helper('emerchantpay');
         $helper->redirectIfNotLoggedIn();
 
+        /** @var Mage_Core_Model_Session $target */
         $session = Mage::getSingleton('checkout/session');
 		$session->setQuoteId($session->getEmerchantPayCheckoutQuoteId(true));
 

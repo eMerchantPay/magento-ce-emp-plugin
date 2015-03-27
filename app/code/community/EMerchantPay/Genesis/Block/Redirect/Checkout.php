@@ -4,11 +4,13 @@ class EMerchantPay_Genesis_Block_Redirect_Checkout extends Mage_Core_Block_Abstr
 {
 	public function _toHtml()
 	{
+        /** @var Mage_Core_Model_Session $target */
 		$target = Mage::getSingleton('core/session')->getEmerchantPayCheckoutRedirectUrl();
 
 		$form = new Varien_Data_Form();
 
-		$form->setAction($target)
+		$form
+            ->setAction($target)
                 ->setId('emerchantpay_redirect_notification')
                 ->setName('emerchantpay_redirect_notification')
                 ->setMethod('POST')

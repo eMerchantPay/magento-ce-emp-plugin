@@ -52,7 +52,8 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Payment action getter compatible with payment model
 	 *
-	 * @see Mage_Sales_Model_Payment::place()
+	 * @see Mage_Sales_Model_Order_Payment::place()
+     *
 	 * @return string
 	 */
 	public function getConfigPaymentAction()
@@ -73,10 +74,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Authorize transaction type
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param float $amount
 	 *
-	 * @return mixed
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	public function authorize(Varien_Object $payment, $amount)
 	{
@@ -91,10 +92,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Capture transaction type
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param float $amount
 	 *
-	 * @return mixed
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	public function capture(Varien_Object $payment, $amount)
 	{
@@ -114,10 +115,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
     /**
      * Genesis Authorize Payment Method
      *
-     * @param Mage_Sales_Model_Order_Payment $payment
+     * @param Varien_Object $payment
      * @param String $amount
      *
-     * @return mixed
+     * @return EMerchantPay_Genesis_Model_Direct
      */
 	private function _authorize($payment, $amount)
 	{
@@ -126,6 +127,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 		try {
 			$this->getHelper()->initClient($this->getCode());
 
+            /** @var Mage_Sales_Model_Order $order */
 			$order      = $payment->getOrder();
 
 			$billing    = $order->getBillingAddress();
@@ -197,10 +199,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Genesis Authorize Payment Method with 3D-Secure
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param String $amount
 	 *
-	 * @return mixed
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	private function _authorize3d($payment, $amount)
 	{
@@ -257,7 +259,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 			}
 
 			// No redirect url? - can't continue
-			// @TODO rework if Sync 3DS is required
+			// TODO rework if Sync 3DS is required
 			if (!isset($genesis->response()->getResponseObject()->redirect_url)) {
 				throw new Exception('Invalid Response.');
 			}
@@ -285,10 +287,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Genesis Sale (Auth/Capture) Payment Method
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param String $amount
 	 *
-	 * @return $this
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	private function _sale($payment, $amount)
 	{
@@ -366,10 +368,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Genesis Sale (Auth/Capture) Payment Method with 3D-Secure
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param String $amount
 	 *
-	 * @return $this
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	private function _sale3d($payment, $amount)
 	{
@@ -427,7 +429,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 			}
 
 			// No redirect url? - can't continue
-			// @TODO rework if Sync 3DS is required
+			// TODO rework if Sync 3DS is required
 			if (!isset($genesis->response()->getResponseObject()->redirect_url)) {
 				throw new Exception($this->getHelper()->__('Invalid Response.'));
 			}
@@ -455,10 +457,11 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Capture a successful auth transaction
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param float $amount
 	 *
-	 * @return $this|Mage_Payment_Model_Abstract
+	 * @return EMerchantPay_Genesis_Model_Direct
+     *
 	 * @throws Mage_Core_Exception
 	 */
 	private function _capture($payment, $amount)
@@ -513,10 +516,10 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Refund the last successful transaction
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 * @param float $amount
 	 *
-	 * @return $this
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	public function refund(Varien_Object $payment, $amount)
 	{
@@ -529,7 +532,11 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
 			$genesis
 				->request()
-					->setTransactionId( $this->getHelper()->genTransactionId($payment->getOrder()->getIncrementId()) )
+					->setTransactionId(
+                        $this->getHelper()->genTransactionId(
+                            $payment->getOrder()->getIncrementId()
+                        )
+                    )
 					->setRemoteIp( $this->getHelper('core/http')->getRemoteAddr(false) )
 					->setReferenceId($payment->getRefundTransactionId())
 					->setCurrency($payment->getOrder()->getBaseCurrencyCode())
@@ -567,9 +574,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 	/**
 	 * Void the last successful transaction
 	 *
-	 * @param Mage_Sales_Model_Order_Payment $payment
+	 * @param Varien_Object $payment
 	 *
-	 * @return mixed
+	 * @return EMerchantPay_Genesis_Model_Direct
 	 */
 	public function void(Varien_Object $payment)
 	{
@@ -582,7 +589,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 				->request()
 					->setTransactionId( $this->getHelper()->genTransactionId($payment->getOrder()->getIncrementId()) )
 					->setRemoteIp( $this->getHelper('core/http')->getRemoteAddr(false) )
-					->setReferenceId($payment->getTransactionId());
+					->setReferenceId($payment->getParentTransactionId());
 
 			$genesis->execute();
 
@@ -597,7 +604,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 			}
 
 			$payment->setTransactionId($genesis->response()->getResponseObject()->unique_id)
-					->setParentTransactionId( $payment->getTransactionId() )
+					->setParentTransactionId( $payment->getParentTransactionId() )
 					->setTransactionAdditionalInfo(
 						Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
 						$information
@@ -612,6 +619,23 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
 		return $this;
 	}
+
+    /**
+     * Cancel order
+     *
+     * @param Varien_Object $payment
+     * @param $amount
+     *
+     * @return EMerchantPay_Genesis_Model_Direct
+     */
+    public function cancel(Varien_Object $payment, $amount)
+    {
+        if ($this->canVoid($payment)) {
+            $this->void($payment, $amount);
+        }
+
+        return $this;
+    }
 
 	/**
 	 * Reconcile (Get Transaction) from Genesis Gateway
@@ -850,13 +874,15 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 		if ($this->is3dEnabled()) {
 			return $this->getHelper()->getRedirectUrl( 'direct' );
 		}
+
+        return false;
 	}
 
 	/**
 	 * Check whether we're doing 3D transactions,
 	 * based on the module configuration
 	 *
-	 * @todo add support for "potential" synchronous 3d
+	 * TODO add support for "potential" synchronous 3d
 	 *
 	 * @return bool
 	 */

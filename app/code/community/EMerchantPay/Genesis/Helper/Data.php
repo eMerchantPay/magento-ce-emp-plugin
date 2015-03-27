@@ -4,6 +4,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 {
 	/**
 	 * Check whether Genesis is initialized and init if not
+     *
+     * @param string $model Name of the model, for which we query settings
 	 *
 	 * @return void
 	 */
@@ -108,12 +110,14 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 	/**
 	 * Generate Transaction Id based on the order id
 	 * and salted to avoid duplication
+     *
+     * @param string|int $increment_id IncrementId of the Order
 	 *
 	 * @return string
 	 */
-	public function genTransactionId($order_id = 0)
+	public function genTransactionId($increment_id = 0)
 	{
-		return sprintf('%s-%s', $order_id, strtoupper(md5(microtime(true) . ':' . mt_rand())));
+		return sprintf('%s-%s', $increment_id, strtoupper(md5(microtime(true) . ':' . mt_rand())));
 	}
 
     /**
@@ -180,6 +184,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     /**
      * Redirect the visitor to the login page if
      * they are not logged in
+     *
+     * @param string $target Alternative target, if you don't want to redirect to login
      *
      * @return void
      */

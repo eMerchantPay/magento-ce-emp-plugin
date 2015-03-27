@@ -4,6 +4,7 @@ class EMerchantPay_Genesis_Block_Redirect_Direct extends Mage_Core_Block_Abstrac
 {
 	public function _toHtml()
 	{
+        /** @var Mage_Core_Model_Session $target */
 		$target = Mage::getSingleton('core/session')->getEmerchantPayDirectRedirectUrl();
 
 		$form = new Varien_Data_Form();
