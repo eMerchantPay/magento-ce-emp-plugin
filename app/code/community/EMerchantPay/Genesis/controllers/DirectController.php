@@ -1,5 +1,27 @@
 <?php
+/*
+ * Copyright (C) 2015 eMerchantPay Ltd.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * @author      eMerchantPay
+ * @copyright   2015 eMerchantPay Ltd.
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
+ */
 
+/**
+ * Class EMerchantPay_Genesis_DirectController
+ *
+ * Front-end method for Direct method
+ */
 class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_Action
 {
     /**
@@ -20,122 +42,104 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
         }
 
         /** @var EMerchantPay_Genesis_Helper_Data $helper */
-        $helper     = Mage::helper('emerchantpay');
+        $helper = Mage::helper('emerchantpay');
         /** @var EMerchantPay_Genesis_Model_Direct $direct */
-        $direct   = Mage::getModel('emerchantpay/direct');
+        $direct = Mage::getModel('emerchantpay/direct');
 
         try {
             $helper->initClient($direct->getCode());
 
-            $notification = new \Genesis\API\Notification();
-            $notification->parseNotification( $this->getRequest()->getPost() );
+            $notification = new \Genesis\API\Notification(
+                $this->getRequest()->getPost()
+            );
 
-            if ( $notification->isAuthentic() ) {
-                $reconcile = $direct->reconcile($notification->getParsedNotification()->unique_id);
+            if ($notification->isAuthentic()) {
+                $notification->initReconciliation();
 
-                if (isset($reconcile->status) && !empty($reconcile->status)) {
+                $reconcile = $notification->getReconciliationObject();
 
-                    // Process the notification based on its type
-                    switch($reconcile->transaction_type) {
-                        case 'authorize':
-                        case 'authorize3d':
-                            // Authorization workflow completion
-                            $status = $direct->processAuthNotification($reconcile);
+                if ($reconcile) {
+                    switch ($reconcile->transaction_type) {
+                        case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
+                        case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
+                            $direct->processAuthNotification($reconcile);
                             break;
-                        case 'sale':
-                        case 'sale3d':
-                            // Sale (Auth/Capture) workflow completion
-                            $status = $direct->processAuthCaptureNotification($reconcile);
+                        case \Genesis\API\Constants\Transaction\Types::SALE:
+                        case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+                            $direct->processCaptureNotification($reconcile);
                             break;
                         default:
-                            // Unsupported transaction type
-                            $status = false;
                             break;
                     }
 
-                    // Acknowledge notification
-                    if ($status) {
-                        $this->getResponse()->setHeader('Content-type', 'application/xml');
-                        $this->getResponse()->setBody($notification->getEchoResponse());
-                    }
+                    $this->getResponse()->setHeader('Content-type', 'application/xml');
+
+                    $this->getResponse()->setBody(
+                        $notification->generateResponse()
+                    );
                 }
             }
-        }
-        catch (Exception $exception) {
+        } catch (Exception $exception) {
             Mage::logException($exception);
         }
     }
 
-	/**
-	 * When a customer chooses eMerchantPay Checkout on
-	 * Checkout/Payment page, show them a "transition"
-	 * page where you notify them, that they will be
-	 * redirected to a new website.
-	 *
-	 * @return void
-	 */
-	public function redirectAction()
-	{
-        /** @var EMerchantPay_Genesis_Helper_Data $helper */
-        Mage::helper('emerchantpay')->redirectIfNotLoggedIn();
-
-		$session = Mage::getSingleton('checkout/session');
-
-		$session->setEMerchantPayDirectQuoteId($session->getQuoteId());
-		$this->getResponse()->setBody(
-			$this->getLayout()->createBlock('emerchantpay/redirect_direct')->toHtml()
-		);
-		$session->unsQuoteId();
-		$session->unsEMerchantPayDirectRedirectUrl();
-	}
-
-	/**
-	 * Customer action when the user returns to the
-	 * store, after successful transaction. However
-	 * we still have no confirmation, so redirect
-	 * the user, but wait for the Notification to
-	 * complete the order.
-	 *
-	 * @see Genesis_API_Documentation \ return_success_url
-	 *
-	 * @return void
-	 */
-	public function successAction()
-	{
+    /**
+     * When a customer has to be redirected, show
+     * a "transition" page where you notify them,
+     * that they will be redirected to a new website.
+     *
+     * @return void
+     */
+    public function redirectAction()
+    {
         /** @var EMerchantPay_Genesis_Helper_Data $helper */
         $helper = Mage::helper('emerchantpay');
+
         $helper->redirectIfNotLoggedIn();
 
-        /** @var Mage_Core_Model_Session $target */
-		$session = Mage::getSingleton('checkout/session');
-		$session->setQuoteId($session->getEMerchantPayDirectQuoteId(true));
+        $this->getResponse()->setBody(
+            $this->getLayout()->createBlock('emerchantpay/redirect_direct')->toHtml()
+        );
+    }
 
-		Mage::getSingleton('checkout/session')->getQuote()->setIsActive(false)->save();
-
-		$this->_redirect('checkout/onepage/success', array('_secure'=>true));
-	}
-
-	/**
-	 * Customer action when the transaction failed.
-	 *
-	 * @see Genesis_API_Documentation \ return_failure_url
-	 *
-	 * @return void
-	 */
-	public function failureAction()
-	{
+    /**
+     * Customer landing page for successful payment
+     *
+     * @see Genesis_API_Documentation \ return_success_url
+     *
+     * @return void
+     */
+    public function successAction()
+    {
         /** @var EMerchantPay_Genesis_Helper_Data $helper */
-		$helper  = Mage::helper('emerchantpay');
+        $helper = Mage::helper('emerchantpay');
+
         $helper->redirectIfNotLoggedIn();
 
-        /** @var Mage_Core_Model_Session $target */
-		$session = Mage::getSingleton('checkout/session');
-		$session->setQuoteId($session->getEMerchantPayDirectQuoteId(true));
+        $this->_redirect('checkout/onepage/success', array('_secure' => true));
+    }
 
-		Mage::getSingleton('checkout/session')->getQuote()->setIsActive(true)->save();
+    /**
+     * Customer landing page for unsuccessful payment
+     *
+     * @see Genesis_API_Documentation \ return_failure_url
+     *
+     * @return void
+     */
+    public function failureAction()
+    {
+        /** @var EMerchantPay_Genesis_Helper_Data $helper */
+        $helper = Mage::helper('emerchantpay');
 
-		Mage::getSingleton('core/session')->addError($helper->__('Payment attempt has failed. Please check your data and try again!'));
+        $helper->redirectIfNotLoggedIn();
 
-		$this->_redirect('checkout/cart', array('_secure'=>true));
-	}
+        $helper->restoreQuote();
+
+        $helper->getCheckoutSession()->addError(
+            $helper->__('We were unable to process your payment! Please check your input or try again later.')
+        );
+
+        $this->_redirect('checkout/cart', array('_secure' => true));
+    }
 }

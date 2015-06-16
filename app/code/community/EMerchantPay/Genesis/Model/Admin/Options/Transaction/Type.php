@@ -1,20 +1,47 @@
 <?php
+/*
+ * Copyright (C) 2015 eMerchantPay Ltd.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * @author      eMerchantPay
+ * @copyright   2015 eMerchantPay Ltd.
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
+ */
 
 /**
  * Class EMerchantPay_Genesis_Model_Admin_Transaction_Type
  *
- * Get code/name of the available transaction types
+ * Admin options Dropdown for Genesis Transaction Types
  */
 class EMerchantPay_Genesis_Model_Admin_Options_Transaction_Type
 {
+    /**
+     * Pre-load the required files
+     */
+    public function __construct()
+    {
+        /** @var EMerchantPay_Genesis_Helper_Data $helper */
+        $helper = Mage::helper('emerchantpay');
+
+        $helper->initLibrary();
+    }
     /**
      * Return the transaction types for an Options field
      *
      * @return array
      */
-	public function toOptionArray()
-	{
-        $options =  array();
+    public function toOptionArray()
+    {
+        $options = array();
 
         foreach (static::getTransactionTypes() as $code => $name) {
             $options[] = array(
@@ -24,7 +51,7 @@ class EMerchantPay_Genesis_Model_Admin_Options_Transaction_Type
         }
 
         return $options;
-	}
+    }
 
     /**
      * Get the transaction types as:
@@ -37,13 +64,13 @@ class EMerchantPay_Genesis_Model_Admin_Options_Transaction_Type
     static function getTransactionTypes()
     {
         return array(
-            EMerchantPay_Genesis_Model_Direct::GENESIS_TRANSACTION_AUTHORIZE     =>
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE =>
                 Mage::helper('emerchantpay')->__('Authorize'),
-            EMerchantPay_Genesis_Model_Direct::GENESIS_TRANSACTION_AUTHORIZE3D   =>
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D =>
                 Mage::helper('emerchantpay')->__('Authorize (3D-Secure)'),
-            EMerchantPay_Genesis_Model_Direct::GENESIS_TRANSACTION_SALE          =>
+            \Genesis\API\Constants\Transaction\Types::SALE =>
                 Mage::helper('emerchantpay')->__('Sale'),
-            EMerchantPay_Genesis_Model_Direct::GENESIS_TRANSACTION_SALE3D        =>
+            \Genesis\API\Constants\Transaction\Types::SALE_3D =>
                 Mage::helper('emerchantpay')->__('Sale (3D-Secure)'),
         );
     }
