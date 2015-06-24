@@ -47,7 +47,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     {
         $this->initLibrary();
 
-        //\Genesis\Config::setEndpoint('emerchantpay');
+        \Genesis\Config::setEndpoint('emerchantpay');
 
         \Genesis\Config::setUsername($this->getConfigData($model, 'genesis_username'));
         \Genesis\Config::setPassword($this->getConfigData($model, 'genesis_password'));
@@ -55,7 +55,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
         \Genesis\Config::setEnvironment($this->getConfigData($model, 'genesis_environment'));
 
         \Genesis\Config::setToken(
-            is_null($this->getConfigData($model, 'genesis_token')) ? '' : $this->getConfigData($model, 'genesis_token')
+            $this->getConfigData($model, 'genesis_token') ? $this->getConfigData($model, 'genesis_token') : ''
         );
     }
 
@@ -69,7 +69,9 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function getConfigData($model, $key)
     {
-        return Mage::getStoreConfig(sprintf('payment/%s/%s', $model, $key));
+        return Mage::getStoreConfig(
+            sprintf('payment/%s/%s', $model, $key)
+        );
     }
 
     /**
@@ -144,13 +146,15 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      * Generate Transaction Id based on the order id
      * and salted to avoid duplication
      *
-     * @param string|int $increment_id IncrementId of the Order
+     * @param string $prefix Prefix of the orderId
      *
      * @return string
      */
-    public function genTransactionId($increment_id = 0)
+    public function genTransactionId($prefix = '')
     {
-        return sprintf('%s-%s', $increment_id, strtoupper(md5(microtime(true) . ':' . mt_rand())));
+        $hash = Mage::helper('core')->uniqHash();
+
+        return (string)$prefix . substr($hash, -(strlen($hash) - strlen($prefix)));
     }
 
     /**
@@ -166,35 +170,31 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
-     * During "Checkout" we don't know have a Token,
-     * however its required at a latter stage, which
-     * means we have to extract it from the payment
-     * data. We save the token when we receive a
-     * notification from Genesis, then we only have
-     * to find the earliest payment_transaction
+     * Return checkout session instance
      *
-     * @param Mage_Sales_Model_Order_Payment $payment
-     *
-     * @return void
+     * @return Mage_Checkout_Model_Session
      */
-    public function setTokenByPaymentTransaction($payment)
+    public function getCheckoutSession()
     {
-        $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
-                          ->setOrderFilter($payment->getOrder())
-                          ->setOrder('created_at', Varien_Data_Collection::SORT_ORDER_ASC);
+        return Mage::getSingleton('checkout/session');
+    }
 
-        /** @var Mage_Sales_Model_Order_Payment_Transaction $transaction */
-        foreach ($collection as $transaction) {
-            $information = $transaction->getAdditionalInformation(
-                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS
-            );
+    public function getCustomerSession()
+    {
+        return Mage::getSingleton('customer/session');
+    }
 
-            foreach ($information as $field => $value) {
-                if ($field == 'terminal_token') {
-                    \Genesis\Config::setToken($value);
-                }
-            }
-        }
+    /**
+     * Return sales quote instance for specified ID
+     *
+     * @param int $quoteId Quote identifier
+     * @return Mage_Sales_Model_Quote
+     */
+    public function getQuote($quoteId)
+    {
+        return Mage::getModel('sales/quote')->load(
+            abs(intval($quoteId))
+        );
     }
 
     /**
@@ -218,6 +218,31 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         return $transaction_details;
+    }
+
+    /**
+     * Get DESC list of specific transactions from payment object
+     *
+     * @param Mage_Sales_Model_Order_Payment    $payment
+     * @param array|string                      $type_filter
+     * @return array
+     */
+    public function getTransactionFromPaymentObject($payment, $type_filter)
+    {
+        $transactions = array();
+
+        $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
+                          ->setOrderFilter($payment->getOrder())
+                          ->addPaymentIdFilter($payment->getId())
+                          ->addTxnTypeFilter($type_filter)
+                          ->setOrder('created_at', Varien_Data_Collection::SORT_ORDER_DESC);
+
+        /** @var Mage_Sales_Model_Order_Payment_Transaction $txn */
+        foreach ($collection as $txn) {
+            $transactions[] = $txn->setOrderPaymentObject($payment);
+        }
+
+        return $transactions;
     }
 
     /**
@@ -286,24 +311,88 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
-     * Return checkout session instance
+     * Set an order status based on transaction status
      *
-     * @return Mage_Checkout_Model_Session
+     * @param Mage_Sales_Model_Order $order
+     * @param string $status
+     * @param string $message
      */
-    public function getCheckoutSession()
+    public function setOrderState($order, $status, $message = '')
     {
-        return Mage::getSingleton('checkout/session');
+        $this->initLibrary();
+
+        switch ($status) {
+            case \Genesis\API\Constants\Transaction\States::APPROVED:
+                $order
+                    ->setState(
+                        Mage_Sales_Model_Order::STATE_PROCESSING,
+                        Mage_Sales_Model_Order::STATE_PROCESSING,
+                        $message,
+                        false
+                    )
+                    ->save();
+                break;
+            case \Genesis\API\Constants\Transaction\States::PENDING:
+            case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
+                $order
+                    ->setState(
+                        Mage_Sales_Model_Order::STATE_PENDING_PAYMENT,
+                        Mage_Sales_Model_Order::STATE_PENDING_PAYMENT,
+                        $message,
+                        false
+                    )
+                    ->save();
+                break;
+            case \Genesis\API\Constants\Transaction\States::ERROR:
+            case \Genesis\API\Constants\Transaction\States::DECLINED:
+
+                /** @var Mage_Sales_Model_Order_Invoice $invoice */
+                foreach ($order->getInvoiceCollection() as $invoice) {
+                    $invoice->cancel();
+                }
+
+                $order
+                    ->registerCancellation($message)
+                    ->setCustomerNoteNotify(true)
+                    ->save();
+
+                break;
+            default:
+                $order->save();
+                break;
+        }
     }
 
     /**
-     * Return sales quote instance for specified ID
+     * During "Checkout" we don't know have a Token,
+     * however its required at a latter stage, which
+     * means we have to extract it from the payment
+     * data. We save the token when we receive a
+     * notification from Genesis, then we only have
+     * to find the earliest payment_transaction
      *
-     * @param int $quoteId Quote identifier
-     * @return Mage_Sales_Model_Quote
+     * @param Mage_Sales_Model_Order_Payment $payment
+     *
+     * @return void
      */
-    public function getQuote($quoteId)
+    public function setTokenByPaymentTransaction($payment)
     {
-        return Mage::getModel('sales/quote')->load($quoteId);
+        $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
+                          ->setOrderFilter($payment->getOrder())
+                          ->setOrder('created_at', Varien_Data_Collection::SORT_ORDER_ASC);
+
+        /** @var Mage_Sales_Model_Order_Payment_Transaction $transaction */
+        foreach ($collection as $transaction) {
+            $information = $transaction->getAdditionalInformation(
+                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS
+            );
+
+            foreach ($information as $field => $value) {
+                if ($field == 'terminal_token') {
+                    \Genesis\Config::setToken($value);
+                }
+            }
+        }
     }
 
     /**
@@ -319,13 +408,20 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
         /** @var Mage_Customer_Helper_Data $customer */
         $customer = Mage::helper('customer');
 
+        /** @var Mage_Core_Helper_Url $url */
+        $url = Mage::helper('core/url');
+
         if (!$customer->isLoggedIn()) {
-            $url = $target ? $target : Mage::getUrl('customer/account/login', array('_secure' => true));
+            $target = $target ? $target : Mage::getUrl('customer/account/login', array('_secure' => true));
+
+            $this->getCustomerSession()->setBeforeAuthUrl(
+                $url->getCurrentUrl()
+            );
 
             Mage::app()
                 ->getFrontController()
                 ->getResponse()
-                ->setRedirect($url)
+                ->setRedirect($target)
                 ->sendHeaders();
 
             exit(0);

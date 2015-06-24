@@ -34,8 +34,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
     // Variables
     protected $_code = 'emerchantpay_direct';
 
-    //protected $_formBlockType = 'emerchantpay/form_direct';
-    protected $_formBlockType = 'payment/form_ccsave';
+    protected $_formBlockType = 'emerchantpay/form_direct';
     protected $_infoBlockType = 'emerchantpay/info_direct';
 
     // Configurations
@@ -45,12 +44,38 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
     protected $_canCapturePartial = true;
     protected $_canRefund         = true;
     protected $_canVoid           = true;
-    protected $_canUseInternal    = true;
+    protected $_canUseInternal    = false;
     protected $_canUseCheckout    = true;
+
+    protected $_isInitializeNeeded      = false;
 
     protected $_canFetchTransactionInfo = true;
     protected $_canUseForMultishipping  = false;
     protected $_canSaveCc               = false;
+
+    /**
+     * Assign the incoming $data to internal variables
+     *
+     * @param mixed $data
+     * @return $this
+     */
+    public function assignData($data)
+    {
+        if (!($data instanceof Varien_Object)) {
+            $data = new Varien_Object($data);
+        }
+
+        $info = $this->getInfoInstance();
+
+        $info->setCcOwner($data->getCcOwner())
+             ->setCcNumber($data->getCcNumber())
+             ->setCcCid($data->getCcCid())
+             ->setCcExpMonth($data->getCcExpMonth())
+             ->setCcExpYear($data->getCcExpYear())
+             ->setCcType($data->getCcType());
+
+        return $this;
+    }
 
     /**
      * Payment action getter compatible with payment model
@@ -172,18 +197,36 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
             $genesis->execute();
 
+            $this->setGenesisResponse(
+                $genesis->response()->getResponseObject()
+            );
+
             $payment
-                ->setTransactionId($genesis->response()->getResponseObject()->unique_id)
-                ->setIsTransactionClosed(true)
+                ->setTransactionId(
+                    $this->getGenesisResponse()->unique_id
+                )
+                ->setIsTransactionClosed(
+                    false
+                )
+                ->setIsTransactionPending(
+                    false
+                )
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                            $genesis->response()->getResponseObject()
+                            $this->getGenesisResponse()
                         )
                     ),
                     null
-                )
-                ->save();
+                );
+
+            $payment->save();
+
+            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
+                throw new \Genesis\Exceptions\ErrorAPI(
+                    $this->getGenesisResponse()->message
+                );
+            }
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -205,7 +248,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
      */
     private function _authorize3d($payment, $amount)
     {
-        Mage::log('Authorize 3D-Secure transaction for Order#' . $payment->getOrder()->getIncrementId());
+        Mage::log('Authorize 3D-Secure transaction for order #' . $payment->getOrder()->getIncrementId());
 
         try {
             $this->getHelper()->initClient($this->getCode());
@@ -253,17 +296,37 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
             $genesis->execute();
 
+            $this->setGenesisResponse(
+                $genesis->response()->getResponseObject()
+            );
+
             $payment
                 ->setTransactionId(
-                    $genesis->response()->getResponseObject()->unique_id
+                    $this->getGenesisResponse()->unique_id
                 )
+                ->setIsTransactionClosed(false)
                 ->setIsTransactionPending(true)
-                ->setSkipTransactionCreation(true)
-                ->setPreparedMessage('3D-Secure: Init.');
+                ->setPreparedMessage('3D-Secure: Redirecting customer to a verification page.')
+                ->setTransactionAdditionalInfo(
+                    array(
+                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
+                            $this->getGenesisResponse()
+                        )
+                    ),
+                    null
+                );
+
+            $payment->save();
+
+            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
+                throw new \Genesis\Exceptions\ErrorAPI(
+                    $this->getGenesisResponse()->message
+                );
+            }
 
             // Save the redirect url with our
             $this->getHelper()->getCheckoutSession()->setEmerchantPayDirectRedirectUrl(
-                $genesis->response()->getResponseObject()->redirect_url
+                $this->getGenesisResponse()->redirect_url
             );
         } catch (Exception $exception) {
             Mage::logException($exception);
@@ -331,22 +394,35 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
             $genesis->execute();
 
+            $this->setGenesisResponse(
+                $genesis->response()->getResponseObject()
+            );
+
             $payment
                 ->setTransactionId(
-                    $genesis->response()->getResponseObject()->unique_id
+                    $this->getGenesisResponse()->unique_id
                 )
                 ->setCurrencyCode(
-                    $genesis->response()->getResponseObject()->currency
+                    $this->getGenesisResponse()->currency
                 )
-                ->setIsTransactionClosed(true)
+                ->setIsTransactionClosed(false)
+                ->setIsTransactionPending(false)
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                            $genesis->response()->getResponseObject()
+                            $this->getGenesisResponse()
                         )
                     ),
                     null
                 );
+
+            $payment->save();
+
+            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
+                throw new \Genesis\Exceptions\ErrorAPI(
+                    $this->getGenesisResponse()->message
+                );
+            }
 
         } catch (Exception $exception) {
             Mage::logException($exception);
@@ -369,7 +445,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
      */
     private function _sale3d($payment, $amount)
     {
-        Mage::log('Sale 3D-Secure transaction for Order#' . $payment->getOrder()->getIncrementId());
+        Mage::log('Sale 3D-Secure transaction for order #' . $payment->getOrder()->getIncrementId());
 
         try {
             $this->getHelper()->initClient($this->getCode());
@@ -417,16 +493,42 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
             $genesis->execute();
 
+            $this->setGenesisResponse(
+                $genesis->response()->getResponseObject()
+            );
+
             // Hold transaction creation
             $payment
+                ->setTransactionId(
+                    $this->getGenesisResponse()->unique_id
+                )
+                ->setIsTransactionClosed(false)
                 ->setIsTransactionPending(true)
-                ->setSkipTransactionCreation(true)
-                ->setPreparedMessage($this->getHelper()->__('3D-Secure: Init.'));
+                ->setPreparedMessage(
+                    $this->getHelper()->__('3D-Secure: Redirecting customer to a verification page.')
+                )
+                ->setTransactionAdditionalInfo(
+                    array(
+                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
+                            $this->getGenesisResponse()
+                        )
+                    ),
+                    null
+                );
+
+            $payment->save();
+
+            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
+                throw new \Genesis\Exceptions\ErrorAPI(
+                    $this->getGenesisResponse()->message
+                );
+            }
 
             // Save the redirect url with our
-            Mage::getSingleton('core/session')->setEmerchantPayDirectRedirectUrl(
-                strval($genesis->response()->getResponseObject()->redirect_url)
+            $this->getHelper()->getCheckoutSession()->setEmerchantPayDirectRedirectUrl(
+                $this->getGenesisResponse()->redirect_url
             );
+
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -464,7 +566,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
             $genesis
                 ->request()
                     ->setTransactionId(
-                        $this->getHelper()->genTransactionId($payment->getOrder()->getIncrementId())
+                        $this->getHelper()->genTransactionId(
+                            $payment->getOrder()->getIncrementId()
+                        )
                     )
                     ->setRemoteIp(
                         $this->getHelper('core/http')->getRemoteAddr(false)
@@ -481,23 +585,32 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
             $genesis->execute();
 
-            $payment->setTransactionId(
+            $payment
+                ->setTransactionId(
                         $genesis->response()->getResponseObject()->unique_id
                     )
-                    ->setParentTransactionId(
-                        $payment->getCcTransId()
-                    )
-                    ->setIsTransactionClosed(true)
-                    ->setTransactionAdditionalInfo(
-                        array(
-                            Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                                $genesis->response()->getResponseObject()
-                            )
-                        ),
-                        null
-                    )
-                    ->save();
+                ->setParentTransactionId(
+                    $reference_id
+                )
+                ->setIsTransactionClosed(
+                    false
+                )
+                ->setShouldCloseParentTransaction(
+                    true
+                )
+                ->resetTransactionAdditionalInfo(
 
+                )
+                ->setTransactionAdditionalInfo(
+                    array(
+                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
+                            $genesis->response()->getResponseObject()
+                        )
+                    ),
+                    null
+                );
+
+            $payment->save();
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -524,9 +637,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
         try {
             $this->getHelper()->initClient($this->getCode());
 
-            $reference_trx = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE);
+            $capture = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE);
 
-            $reference_id = $reference_trx->getTxnId();
+            $reference_id = $capture->getTxnId();
 
             $genesis = new \Genesis\Genesis('Financial\Refund');
 
@@ -551,8 +664,15 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
             $genesis->execute();
 
             $payment
-                ->setTransactionId($genesis->response()->getResponseObject()->unique_id)
-                ->setParentTransactionId($reference_id)
+                ->setTransactionId(
+                    $genesis->response()->getResponseObject()->unique_id
+                )
+                ->setParentTransactionId(
+                    $reference_id
+                )
+                ->setShouldCloseParentTransaction(
+                    true
+                )
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
@@ -561,6 +681,8 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
                     ),
                     null
                 );
+
+            $payment->save();
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -586,7 +708,12 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
         try {
             $this->getHelper()->initClient($this->getCode());
 
-            $reference_id = $payment->getAuthorizationTransaction()->getTxnId();
+            $transactions = $this->getHelper()->getTransactionFromPaymentObject($payment, array(
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
+            ));
+
+            $reference_id = $transactions ? reset($transactions)->getTxnId() : null;
 
             $genesis = new \Genesis\Genesis('Financial\Void');
 
@@ -611,6 +738,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
                 ->setParentTransactionId(
                     $reference_id
                 )
+                ->setShouldCloseParentTransaction(
+                    true
+                )
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
@@ -619,6 +749,8 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
                     ),
                     null
                 );
+
+            $payment->save();
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -708,13 +840,12 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
     }
 
     /**
-     * Process a notification for Authorize-type Transaction
+     * Handle an incoming Genesis notification
      *
-     * @param $reconcile stdClass
-     *
-     * @return bool true/false based on successful/unsuccessful status
+     * @param stdClass $reconcile
+     * @return bool
      */
-    public function processAuthNotification($reconcile)
+    public function processNotification($reconcile)
     {
         try {
             $this->getHelper()->initClient($this->getCode());
@@ -724,131 +855,54 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
 
             $order = $transaction->getOrder();
 
-            if ($order->getQuoteId()) {
+            if ($order) {
                 $payment = $order->getPayment();
 
-                $payment->setTransactionId($reconcile->unique_id);
+                $transaction->setOrderPaymentObject($payment);
 
-                $payment->setIsTransactionPending(false);
-
-                $payment->resetTransactionAdditionalInfo();
-
-                $payment->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                            $reconcile
-                        )
-                    ),
-                    null
+                $transaction->unsAdditionalInformation(
+                    Mage_Sales_Model_Order_Payment_transaction::RAW_DETAILS
                 );
 
-                $payment->registerAuthorizationNotification($reconcile->amount, true);
+                $transaction->setAdditionalInformation(
+                    Mage_Sales_Model_Order_Payment_transaction::RAW_DETAILS,
+                    $this->getHelper()->getArrayFromGatewayResponse(
+                        $reconcile
+                    )
+                );
 
-                switch ($reconcile->status) {
-                    case \Genesis\API\Constants\Transaction\States::PENDING:
-                    case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
-                        $order->setState(
-                            Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                            Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                            $reconcile->message,
-                            false
-                        )
-                              ->save();
-                        break;
-                    case \Genesis\API\Constants\Transaction\States::DECLINED:
-                        $order->setState(
-                            Mage_Sales_Model_Order::STATE_HOLDED,
-                            Mage_Sales_Model_Order::STATE_HOLDED,
-                            $reconcile->message,
-                            true
-                        )
-                              ->save();
-                        break;
-                    default:
-                        $order->save();
-                        break;
+                if ($reconcile->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+                    $transaction->setIsClosed(false);
+                }
+                else {
+                    $transaction->setIsClosed(true);
                 }
 
-                return true;
-            }
-        } catch (Exception $exception) {
-            Mage::logException($exception);
-        }
+                $transaction->save();
 
-        return false;
-    }
-
-    /**
-     * Process Sale-type (Auth/Capture) Transaction
-     *
-     * @param $reconcile
-     *
-     * @return bool true/false on successful/unsuccessful status
-     */
-    public function processCaptureNotification($reconcile)
-    {
-        try {
-            $this->getHelper()->initClient($this->getCode());
-
-            /** @var Mage_Sales_Model_Order_Payment_Transaction $transaction */
-            $transaction = Mage::getModel('sales/order_payment_transaction')->load($reconcile->unique_id, 'txn_id');
-
-            $order = $transaction->getOrder();
-
-            if ($order->getQuoteId()) {
-                $payment = $order->getPayment();
-
-                $payment->setTransactionId($reconcile->unique_id);
-
-                $payment->resetTransactionAdditionalInfo();
-
-                $payment->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                            $reconcile
-                        )
-                    ),
-                    null
-                );
-
-                $payment->setIsTransactionPending(false);
-
-                $payment->registerCaptureNotification($reconcile->amount, true);
+                switch ($reconcile->transaction_type) {
+                    case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
+                    case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
+                        $payment->registerAuthorizationNotification($reconcile->amount, true);
+                        break;
+                    case \Genesis\API\Constants\Transaction\Types::SALE:
+                    case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+                        $payment->setShouldCloseParentTransaction(true);
+                        $payment->registerCaptureNotification($reconcile->amount, true);
+                        break;
+                    default:
+                        break;
+                }
 
                 $payment->save();
 
-                switch ($reconcile->status) {
-                    case \Genesis\API\Constants\Transaction\States::PENDING:
-                    case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
-                        $order->setState(
-                            Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                            Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                            $reconcile->message,
-                            false
-                        )
-                              ->save();
-                        break;
-                    case \Genesis\API\Constants\Transaction\States::DECLINED:
-                        $order->setState(
-                            Mage_Sales_Model_Order::STATE_HOLDED,
-                            Mage_Sales_Model_Order::STATE_HOLDED,
-                            $reconcile->message,
-                            true
-                        )
-                              ->save();
-                        break;
-                    default:
-                        $order->save();
-                        break;
-                }
-
-                return true;
+                $this->getHelper()->setOrderState($order, $reconcile->status, $reconcile->message);
             }
         } catch (Exception $exception) {
             Mage::logException($exception);
         }
 
-        return false;
+        return $this;
     }
 
     /**
@@ -873,8 +927,6 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
     /**
      * Check whether we're doing 3D transactions,
      * based on the module configuration
-     *
-     * TODO: add support for "potential" synchronous 3d
      *
      * @return bool
      */

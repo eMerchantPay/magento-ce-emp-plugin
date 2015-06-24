@@ -20,7 +20,6 @@
 class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abstract
 {
     protected $_name = 'emerchantpay';
-
     protected $_code = 'emerchantpay_checkout';
 
     protected $_formBlockType = 'emerchantpay/form_checkout';
@@ -65,7 +64,11 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
 
             $genesis
                 ->request()
-                    ->setTransactionId($order->getIncrementId())
+                    ->setTransactionId(
+                        $this->getHelper()->genTransactionId(
+                            $order->getIncrementId()
+                        )
+                    )
                     ->setCurrency($order->getBaseCurrencyCode())
                     ->setAmount($amount)
                     ->setUsage(
@@ -115,11 +118,15 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                     $genesis->response()->getResponseObject()->unique_id
                 )
                 ->setIsTransactionPending(true)
-                ->addTransaction(Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER)
-                ->setSkipTransactionCreation(true);
+                ->addTransaction(
+                    Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER
+                );
+
+
+            $payment->setSkipTransactionCreation(true);
 
             // Save the redirect url with our
-            Mage::getSingleton('core/session')->setEmerchantPayCheckoutRedirectUrl(
+            $this->getHelper()->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl(
                 $genesis->response()->getResponseObject()->redirect_url
             );
         } catch (Exception $exception) {
@@ -128,8 +135,6 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
             Mage::throwException(
                 $this->getHelper()->__($exception->getMessage())
             );
-
-            return false;
         }
 
         return $this;
@@ -149,23 +154,6 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
             $this->getHelper()->initClient($this->getCode());
 
             $this->getHelper()->setTokenByPaymentTransaction($payment);
-
-            /*
-            $reference_id = '';
-
-            $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
-                              ->setOrderFilter($payment->getOrder())
-                              ->addPaymentIdFilter($payment->getId())
-                              ->addTxnTypeFilter(Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH);
-            */
-
-            /** @var Mage_Sales_Model_Order_Payment_Transaction $txn */
-            /*
-            foreach ($collection as $txn) {
-                $txn->setOrderPaymentObject($payment);
-                $reference_id = $txn->getTxnId();
-            }
-            */
 
             $authorize = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH);
 
@@ -202,7 +190,12 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                 ->setParentTransactionId(
                     $reference_id
                 )
-                ->resetTransactionAdditionalInfo()
+                ->setShouldCloseParentTransaction(
+                    true
+                )
+                ->resetTransactionAdditionalInfo(
+
+                )
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
@@ -210,16 +203,15 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                         )
                     ),
                     null
-                )
-                ->save();
+                );
+
+            $payment->save();
         } catch (Exception $exception) {
             Mage::logException($exception);
 
             Mage::throwException(
                 $this->getHelper()->__($exception->getMessage())
             );
-
-            return false;
         }
 
         return $this;
@@ -242,40 +234,45 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
 
             $this->getHelper()->setTokenByPaymentTransaction($payment);
 
-            $reference_id = '';
+            $capture = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE);
 
-            $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
-                              ->setOrderFilter($payment->getOrder())
-                              ->addPaymentIdFilter($payment->getId())
-                              ->addTxnTypeFilter(Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE);
-
-            /** @var Mage_Sales_Model_Order_Payment_Transaction $txn */
-            foreach ($collection as $txn) {
-                $txn->setOrderPaymentObject($payment);
-                $reference_id = $txn->getTxnId();
-            }
+            $reference_id = $capture->getTxnId();
 
             $genesis = new \Genesis\Genesis('Financial\Refund');
 
             $genesis
-                ->request()
-                    ->setTransactionId(
-                        $this->getHelper()->genTransactionId(
-                            $payment->getOrder()->getIncrementId()
-                        )
-                    )
-                    ->setRemoteIp(
-                        $this->getHelper('core/http')->getRemoteAddr(false)
-                    )
-                    ->setReferenceId($reference_id)
-                    ->setCurrency($payment->getOrder()->getBaseCurrencyCode())
-                    ->setAmount($amount);
+              ->request()
+                  ->setTransactionId(
+                      $this->getHelper()->genTransactionId(
+                          $payment->getOrder()->getIncrementId()
+                      )
+                  )
+                  ->setRemoteIp(
+                      $this->getHelper('core/http')->getRemoteAddr(false)
+                  )
+                  ->setReferenceId(
+                      $reference_id
+                  )
+                  ->setCurrency(
+                      $payment->getOrder()->getBaseCurrencyCode()
+                  )
+                  ->setAmount($amount);
 
             $genesis->execute();
 
             $payment
-                ->setTransactionId($genesis->response()->getResponseObject()->unique_id)
-                ->setParentTransactionId($reference_id)
+                ->setTransactionId(
+                    $genesis->response()->getResponseObject()->unique_id
+                )
+                ->setParentTransactionId(
+                    $reference_id
+                )
+                ->setShouldCloseParentTransaction(
+                    true
+                )
+                ->resetTransactionAdditionalInfo(
+
+                )
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
@@ -283,8 +280,9 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                         )
                     ),
                     null
-                )
-                ->save();
+                );
+
+            $payment->save();
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -312,7 +310,12 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
 
             $this->getHelper()->setTokenByPaymentTransaction($payment);
 
-            $reference_id = $payment->getAuthorizationTransaction()->getTxnId();
+            $transactions = $this->getHelper()->getTransactionFromPaymentObject($payment, array(
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
+            ));
+
+            $reference_id = $transactions ? reset($transactions)->getTxnId() : null;
 
             $genesis = new \Genesis\Genesis('Financial\Void');
 
@@ -323,14 +326,28 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                             $payment->getOrder()->getIncrementId()
                         )
                     )
-                    ->setRemoteIp($this->getHelper('core/http')->getRemoteAddr(false))
-                    ->setReferenceId($reference_id);
+                    ->setRemoteIp(
+                        $this->getHelper('core/http')->getRemoteAddr(false)
+                    )
+                    ->setReferenceId(
+                        $reference_id
+                    );
 
             $genesis->execute();
 
             $payment
-                ->setTransactionId($genesis->response()->getResponseObject()->unique_id)
-                ->setParentTransactionId($reference_id)
+                ->setTransactionId(
+                    $genesis->response()->getResponseObject()->unique_id
+                )
+                ->setParentTransactionId(
+                    $reference_id
+                )
+                ->setShouldCloseParentTransaction(
+                    true
+                )
+                ->resetTransactionAdditionalInfo(
+
+                )
                 ->setTransactionAdditionalInfo(
                     array(
                         Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
@@ -338,9 +355,9 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                         )
                     ),
                     null
-                )
-                ->save();
+                );
 
+            $payment->save();
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -451,8 +468,7 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
             $genesis->execute();
 
             return $genesis->response()->getResponseObject();
-        }
-        catch (Exception $exception) {
+        } catch (Exception $exception) {
             Mage::logException($exception);
 
             Mage::throwException(
@@ -463,241 +479,77 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
         return false;
     }
 
-    /**
-     * Process a notification for Authorize-type Transaction
-     *
-     * @param stdClass $checkout_transaction
-     *
-     * @return bool true/false based on successful/unsuccessful status
-     */
-    public function processAuthorizeNotification($checkout_transaction)
+    public function processNotification($checkout_transaction)
     {
         try {
             $this->getHelper()->initClient($this->getCode());
 
-            $payment_transaction = $checkout_transaction->payment_transaction;
-
             /** @var Mage_Sales_Model_Order_Payment_Transaction $transaction */
             $transaction = Mage::getModel('sales/order_payment_transaction')->load($checkout_transaction->unique_id, 'txn_id');
 
-            $transaction->setOrderPaymentObject(
-                $transaction->getOrder()->getPayment()
-            );
-
-            $transaction->setAdditionalInformation(
-                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
-                $this->getHelper()->getArrayFromGatewayResponse(
-                    $checkout_transaction
-                )
-            );
-
-            $transaction->save();
-
             $order = $transaction->getOrder();
 
-            if ($order->getQuoteId()) {
-                $payment = $order->getPayment();
-
-                $payment->setTransactionId($payment_transaction->unique_id);
-
-                $payment->setParentTransactionId($checkout_transaction->unique_id);
-
-                $payment->setShouldCloseParentTransaction(true);
-
-                $payment->resetTransactionAdditionalInfo();
-
-                $payment->setIsTransactionPending(false);
-
-                $payment->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                            $payment_transaction
+            if ($order) {
+                $transaction
+                    ->setOrderPaymentObject(
+                        $order->getPayment()
+                    )
+                    ->setAdditionalInformation(
+                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
+                        $this->getHelper()->getArrayFromGatewayResponse(
+                            $checkout_transaction
                         )
-                    ),
-                    null
-                );
+                    )
+                    ->save();
 
-                /*
-                $payment->addTransaction(
-                    Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
-                    null,
-                    true,
-                    $payment_transaction->message
-                );
-                */
+                if (isset($checkout_transaction->payment_transaction)) {
+                    $payment_transaction = $checkout_transaction->payment_transaction;
 
-                //$payment->save();
+                    $payment = $order->getPayment();
 
-                $payment->registerAuthorizationNotification($payment_transaction->amount, true);
-
-                switch ($checkout_transaction->status) {
-                    case \Genesis\API\Constants\Transaction\States::PENDING:
-                    case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
-                        $order->setState(
-                                    Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                                    Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                                    $payment_transaction->message,
-                                    false
+                    $payment
+                        ->setTransactionId($payment_transaction->unique_id)
+                        ->setParentTransactionId($checkout_transaction->unique_id)
+                        ->setShouldCloseParentTransaction(true)
+                        ->setIsTransactionPending(false)
+                        ->resetTransactionAdditionalInfo()
+                        ->setTransactionAdditionalInfo(
+                            array(
+                                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
+                                    $payment_transaction
                                 )
-                            ->save();
-                        break;
-                    case \Genesis\API\Constants\Transaction\States::DECLINED:
-                        $order->setState(
-                                    Mage_Sales_Model_Order::STATE_HOLDED,
-                                    Mage_Sales_Model_Order::STATE_HOLDED,
-                                    $payment_transaction->message,
-                                    true
-                                )
-                            ->save();
-                        break;
-                    default:
-                        $order->save();
-                        break;
+                            ),
+                            null
+                        );
+
+                    if ($payment_transaction->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+                        $payment->setIsTransactionClosed(false);
+                    }
+                    else {
+                        $payment->setIsTransactionClosed(true);
+                    }
+
+                    switch ($payment_transaction->transaction_type) {
+                        case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
+                        case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
+                            $payment->registerAuthorizationNotification($payment_transaction->amount, true);
+                            break;
+                        case \Genesis\API\Constants\Transaction\Types::SALE:
+                        case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+                            $payment->registerCaptureNotification($payment_transaction->amount, true);
+                            break;
+                        default:
+                            break;
+                    }
+
+
+                    $payment->save();
                 }
 
-                return true;
-            }
-        } catch (Exception $exception) {
-            Mage::logException($exception);
-        }
-
-        return false;
-    }
-
-    /**
-     * Process Sale-type (Auth/Capture) Transaction
-     *
-     * @param $checkout_transaction
-     *
-     * @return bool true/false on successful/unsuccessful status
-     */
-    public function processCaptureNotification($checkout_transaction)
-    {
-        try {
-            $this->getHelper()->initClient($this->getCode());
-
-            $payment_transaction = $checkout_transaction->payment_transaction;
-
-            /** @var Mage_Sales_Model_Order_Payment_Transaction $transaction */
-            $transaction = Mage::getModel('sales/order_payment_transaction')->load($checkout_transaction->unique_id, 'txn_id');
-
-            $transaction->setOrderPaymentObject(
-                $transaction->getOrder()->getPayment()
-            );
-
-            $transaction->setAdditionalInformation(
-                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS,
-                $this->getHelper()->getArrayFromGatewayResponse(
-                    $checkout_transaction
-                )
-            );
-
-            $transaction->save();
-
-            $order = $transaction->getOrder();
-
-            if ($order->getQuoteId()) {
-                $payment = $order->getPayment();
-
-                $payment->setTransactionId($payment_transaction->unique_id);
-
-                $payment->setParentTransactionId($checkout_transaction->unique_id);
-
-                $payment->setShouldCloseParentTransaction(true);
-
-                $payment->resetTransactionAdditionalInfo();
-
-                $payment->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS => $this->getHelper()->getArrayFromGatewayResponse(
-                            $payment_transaction
-                        )
-                    ),
-                    null
+                $this->getHelper()->setOrderState(
+                    $order,
+                    isset($payment_transaction) ? $payment_transaction->status : $checkout_transaction->status
                 );
-
-                $payment->setIsTransactionPending(false);
-                /*
-                $payment->addTransaction(
-                    Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE,
-                    null,
-                    true,
-                    $payment_transaction->message
-                );
-               */
-
-                $payment->registerCaptureNotification($payment_transaction->amount, true);
-
-                $payment->save();
-
-                switch ($checkout_transaction->status) {
-                    case \Genesis\API\Constants\Transaction\States::PENDING:
-                    case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
-                        $order->setState(
-                                    Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                                    Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                                    $payment_transaction->message,
-                                    false
-                                )
-                               ->save();
-                        break;
-                    case \Genesis\API\Constants\Transaction\States::DECLINED:
-                        $order->setState(
-                                    Mage_Sales_Model_Order::STATE_HOLDED,
-                                    Mage_Sales_Model_Order::STATE_HOLDED,
-                                    $payment_transaction->message,
-                                    true
-                                )
-                              ->save();
-                        break;
-                    default:
-                        $order->save();
-                        break;
-                }
-
-                /*
-                switch ($checkout_transaction->status) {
-                    case \Genesis\API\Constants\Transaction\States::APPROVED:
-
-                        $orderStatus = $this->getConfigData('order_status');
-
-                        if (!$orderStatus || $order->getIsVirtual()) {
-                            $orderStatus = $order->getConfig()
-                                                 ->getStateDefaultStatus(Mage_Sales_Model_Order::STATE_PROCESSING);
-                        }
-
-                        $order->setState(
-                            $orderStatus,
-                            $orderStatus,
-                            $payment_transaction->message,
-                            true
-                        )
-                              ->save();
-                        break;
-                    case \Genesis\API\Constants\Transaction\States::PENDING:
-                    case \Genesis\API\Constants\Transaction\States::PENDING_ASYNC:
-                        $order->setState(
-                            Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                            Mage_Sales_Model_Order::STATE_PAYMENT_REVIEW,
-                            $payment_transaction->message,
-                            false
-                        )
-                              ->save();
-                        break;
-                    case \Genesis\API\Constants\Transaction\States::DECLINED:
-                        $order->setState(
-                            Mage_Sales_Model_Order::STATE_HOLDED,
-                            Mage_Sales_Model_Order::STATE_HOLDED,
-                            $payment_transaction->message,
-                            true
-                        )
-                              ->save();
-                        break;
-                    default:
-                        $order->save();
-                        break;
-                }
-                */
 
                 return true;
             }

@@ -24,6 +24,19 @@
  */
 class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front_Action
 {
+    /** @var EMerchantPay_Genesis_Helper_Data $helper */
+    private $helper;
+
+    /** @var EMerchantPay_Genesis_Model_Checkout $checkout */
+    private $checkout;
+
+    protected function _construct()
+    {
+        $this->helper = Mage::helper('emerchantpay');
+
+        $this->checkout = Mage::getModel('emerchantpay/checkout');
+    }
+
     /**
      * Process an incoming Genesis Notification
      * If it appears valid, do a reconcile and
@@ -42,12 +55,7 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
         }
 
         try {
-            /** @var EMerchantPay_Genesis_Helper_Data $helper */
-            $helper = Mage::helper('emerchantpay');
-            /** @var EMerchantPay_Genesis_Model_Checkout $checkout */
-            $checkout = Mage::getModel('emerchantpay/checkout');
-
-            $helper->initClient($checkout->getCode());
+            $this->helper->initClient($this->checkout->getCode());
 
             $notification = new \Genesis\API\Notification(
                 $this->getRequest()->getPost()
@@ -58,19 +66,8 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
 
                 $reconcile = $notification->getReconciliationObject();
 
-                if (isset($reconcile->payment_transaction)) {
-                    switch ($reconcile->payment_transaction->transaction_type) {
-                        case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-                        case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
-                            $checkout->processAuthorizeNotification($reconcile);
-                            break;
-                        case \Genesis\API\Constants\Transaction\Types::SALE:
-                        case \Genesis\API\Constants\Transaction\Types::SALE_3D:
-                            $checkout->processCaptureNotification($reconcile);
-                            break;
-                        default:
-                            break;
-                    }
+                if (isset($reconcile)) {
+                    $this->checkout->processNotification($reconcile);
 
                     $this->getResponse()->setHeader('Content-type', 'application/xml');
 
@@ -96,10 +93,7 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function redirectAction()
     {
-        /** @var EMerchantPay_Genesis_Helper_Data $helper */
-        $helper = Mage::helper('emerchantpay');
-
-        $helper->redirectIfNotLoggedIn();
+        $this->helper->redirectIfNotLoggedIn();
 
         $this->getResponse()->setBody(
             $this->getLayout()->createBlock('emerchantpay/redirect_checkout')->toHtml()
@@ -115,10 +109,7 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function successAction()
     {
-        /** @var EMerchantPay_Genesis_Helper_Data $helper */
-        $helper = Mage::helper('emerchantpay');
-
-        $helper->redirectIfNotLoggedIn();
+        $this->helper->redirectIfNotLoggedIn();
 
         $this->_redirect('checkout/onepage/success', array('_secure' => true));
     }
@@ -132,15 +123,12 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function failureAction()
     {
-        /** @var EMerchantPay_Genesis_Helper_Data $helper */
-        $helper = Mage::helper('emerchantpay');
+        $this->helper->redirectIfNotLoggedIn();
 
-        $helper->redirectIfNotLoggedIn();
+        $this->helper->restoreQuote();
 
-        $helper->restoreQuote();
-
-        $helper->getCheckoutSession()->addError(
-            $helper->__('We were unable to process your payment! Please check your input or try again later.')
+        $this->helper->getCheckoutSession()->addError(
+            $this->helper->__('We were unable to process your payment! Please check your input or try again later.')
         );
 
         $this->_redirect('checkout/cart', array('_secure' => true));
@@ -153,22 +141,14 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function cancelAction()
     {
-        /** @var EMerchantPay_Genesis_Helper_Data $helper */
-        $helper = Mage::helper('emerchantpay');
+        $this->helper->redirectIfNotLoggedIn();
 
-        $helper->redirectIfNotLoggedIn();
+        $this->helper->restoreQuote($shouldCancel = true);
 
-        $helper->restoreQuote($shouldCancel = true);
-
-        $helper->getCheckoutSession()->addSuccess(
-            $helper->__('Your payment session has been cancelled successfully!')
+        $this->helper->getCheckoutSession()->addSuccess(
+            $this->helper->__('Your payment session has been cancelled successfully!')
         );
 
         $this->_redirect('checkout/cart');
-    }
-
-    public function debugAction()
-    {
-
     }
 }
