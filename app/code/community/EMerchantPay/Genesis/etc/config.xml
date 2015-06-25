@@ -2,7 +2,7 @@
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.0.0</version>
+         <version>1.2.0</version>
        </EMerchantPay_Genesis>
     </modules>
 
@@ -46,25 +46,21 @@
 
     <default>
         <payment>
-            <emerchantpay_standard>
-                <model>emerchantpay/standard</model>
+            <emerchantpay_direct>
+                <model>emerchantpay/direct</model>
                 <order_status>pending</order_status>
-                <title>Credit Card (eMerchantPay)</title>
-                <payment_action>capture</payment_action>
-                <cctypes>VI,MC</cctypes>
+                <title>Credit Card (eMerchantPay Direct)</title>
+                <cctypes>VI,MC,SM,AE,DI,JCB,OT</cctypes>
                 <payment_action>authorize</payment_action>
                 <group>emerchantpay</group>
-            </emerchantpay_standard>
-            <!--
-            <emerchantpay_express>
-                <model>emerchantpay/express</model>
+            </emerchantpay_direct>
+            <emerchantpay_checkout>
+                <model>emerchantpay/checkout</model>
                 <order_status>pending</order_status>
-                <title>Credit Card (eMerchantPay Express)</title>
-                <cctypes>VI,MC</cctypes>
-                <payment_action>authorize</payment_action>
+                <title>Credit Card (eMerchantPay Checkout)</title>
+                <payment_action>order</payment_action>
                 <group>emerchantpay</group>
-            </emerchantpay_express>
-            -->
+            </emerchantpay_checkout>
          </payment>
     </default>
 </config>
