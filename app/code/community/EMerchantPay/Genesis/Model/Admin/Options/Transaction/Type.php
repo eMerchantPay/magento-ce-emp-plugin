@@ -20,7 +20,7 @@
 /**
  * Class EMerchantPay_Genesis_Model_Admin_Transaction_Type
  *
- * Admin options Dropdown for Genesis Transaction Types
+ * Admin options Drop-down for Genesis Transaction Types
  */
 class EMerchantPay_Genesis_Model_Admin_Options_Transaction_Type
 {

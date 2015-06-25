@@ -39,7 +39,7 @@ Installation (manual)
 ---------------------
 
 * Copy the files to the root folder of your Magento installation
-* Login inside the Admin Panel and go to ```System``` -> ```Configuration``` -> ```Payment Methods````
+* Login inside the Admin Panel and go to ```System``` -> ```Configuration``` -> ```Payment Methods```
 * Check ```Enable```, set the correct credentials, select your prefered payment method and click ```Save config```
 
 You're now ready to process payments through our gateway.
