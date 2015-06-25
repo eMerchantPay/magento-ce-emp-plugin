@@ -19,7 +19,6 @@
 
 class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abstract
 {
-    protected $_name = 'emerchantpay';
     protected $_code = 'emerchantpay_checkout';
 
     protected $_formBlockType = 'emerchantpay/form_checkout';
@@ -597,7 +596,7 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
     private function getHelper($helper = '')
     {
         if (empty($helper)) {
-            return Mage::helper($this->_name);
+            return Mage::helper('emerchantpay');
         } else {
             return Mage::helper($helper);
         }
