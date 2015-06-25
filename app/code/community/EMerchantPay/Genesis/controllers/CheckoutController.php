@@ -66,7 +66,7 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
 
                 $reconcile = $notification->getReconciliationObject();
 
-                if (isset($reconcile)) {
+                if (isset($reconcile->unique_id)) {
                     $this->checkout->processNotification($reconcile);
 
                     $this->getResponse()->setHeader('Content-type', 'application/xml');

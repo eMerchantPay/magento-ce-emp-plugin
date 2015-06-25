@@ -24,6 +24,9 @@
  */
 class EMerchantPay_Genesis_Block_Form_Checkout extends Mage_Payment_Block_Form
 {
+    /**
+     * Setup
+     */
     protected function _construct()
     {
         parent::_construct();

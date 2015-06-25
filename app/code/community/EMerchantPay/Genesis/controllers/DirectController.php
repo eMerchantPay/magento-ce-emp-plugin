@@ -66,7 +66,7 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
 
                 $reconcile = $notification->getReconciliationObject();
 
-                if ($reconcile) {
+                if (isset($reconcile->unique_id)) {
                     $this->direct->processNotification($reconcile);
 
                     $this->getResponse()->setHeader('Content-type', 'application/xml');
