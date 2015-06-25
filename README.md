@@ -31,7 +31,7 @@ Installation (via Modman)
 * Install [ModMan]
 * Navigate to the root of your Magento installation
 * run ```modman init```
-* and clone this repo ```modman clone https://github.com/E-ComProcessing/genesis_php```
+* and clone this repo ```modman clone https://github.com/eMerchantPay/magento-ce-emp-plugin```
 * Login inside the Admin Panel and go to ```System``` -> ```Configuration``` -> ```Payment Methods```
 * Check ```Enable```, set the correct credentials, select your prefered payment method and click ```Save config```
 
