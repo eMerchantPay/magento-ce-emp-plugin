@@ -20,7 +20,7 @@
 /**
  * Class EMerchantPay_Genesis_Model_Admin_Options_Environment
  *
- * Admin options Dropdown for Gateway environment
+ * Admin options Drop-down for Gateway environment
  */
 class EMerchantPay_Genesis_Model_Admin_Options_Environment
 {
