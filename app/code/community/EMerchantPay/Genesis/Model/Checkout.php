@@ -34,9 +34,8 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
     protected $_canUseInternal    = false;
     protected $_canUseCheckout    = true;
 
-    protected $_canUseForMultishipping  = true;
+    protected $_canUseForMultishipping  = false;
     protected $_canFetchTransactionInfo = true;
-    protected $_canSaveCc               = false;
 
     /**
      * WPF Create method piggyback-ing the Magento's internal Authorize method
