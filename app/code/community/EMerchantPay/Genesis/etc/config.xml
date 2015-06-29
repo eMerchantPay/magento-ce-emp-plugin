@@ -1,8 +1,25 @@
 <?xml version="1.0"?>
+<!--
+Copyright (C) 2015 eMerchantPay Ltd.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+@author      eMerchantPay
+@copyright   2015 eMerchantPay Ltd.
+@license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
+-->
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.2.2</version>
+         <version>1.2.3</version>
        </EMerchantPay_Genesis>
     </modules>
 
@@ -27,7 +44,7 @@
 
         <payment>
             <groups>
-                <emerchantpay>eMerchantPay Ltd.</emerchantpay>
+                <emerchantpay>eMerchantPay</emerchantpay>
             </groups>
         </payment>
     </global>
@@ -42,7 +59,31 @@
                 </args>
             </emerchantpay>
         </routers>
+        <secure_url>
+            <emerchantpay>/emerchantpay/</emerchantpay>
+        </secure_url>
+        <translate>
+            <modules>
+                <EMerchantPay_Genesis>
+                    <files>
+                        <default>EMerchantPay_Genesis.csv</default>
+                    </files>
+                </EMerchantPay_Genesis>
+            </modules>
+        </translate>
     </frontend>
+
+    <adminhtml>
+        <translate>
+            <modules>
+                <EMerchantPay_Genesis>
+                    <files>
+                        <default>EMerchantPay_Genesis.csv</default>
+                    </files>
+                </EMerchantPay_Genesis>
+            </modules>
+        </translate>
+    </adminhtml>
 
     <default>
         <payment>

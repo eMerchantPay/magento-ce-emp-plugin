@@ -54,6 +54,25 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc
     protected $_canSaveCc               = false;
 
     /**
+     * Check if we're on a secure page and run
+     * the parent verification
+     *
+     * @param Mage_Sales_Model_Quote|null $quote
+     *
+     * @return bool
+     */
+    public function isAvailable($quote = null)
+    {
+        $isSecure = (bool) Mage::app()->getStore()->isCurrentlySecure();
+
+        if (!$isSecure) {
+            return false;
+        }
+
+        return parent::isAvailable($quote);
+    }
+
+    /**
      * Assign the incoming $data to internal variables
      *
      * @param mixed $data
