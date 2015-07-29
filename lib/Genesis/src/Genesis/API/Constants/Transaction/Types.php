@@ -32,6 +32,16 @@ namespace Genesis\API\Constants\Transaction;
 class Types
 {
     /**
+     * Address Verification
+     */
+    const AVS = 'avs';
+
+    /**
+     * Account Verification
+     */
+    const ACCOUNT_VERIFICATION = 'account_verification';
+
+    /**
      * A standard Authorization
      */
     const AUTHORIZE = 'authorize';
@@ -92,24 +102,29 @@ class Types
     const RECURRING_SALE = 'recurring_sale';
 
     /**
-     * Wallet-based payment
+     * Bank transfer, popular in Netherlands (via ABN)
      */
-    const EZEEWALLET = 'ezeewallet';
-
-    /**
-     * Bank transfer payment, popular in Germany
-     */
-    const SOFORT = 'sofort';
-
-    /**
-     * Bank transfer, popular in Netherlands
-     */
-    const SOFORT_IDEAL = 'sofort_ideal';
+    const ABNIDEAL = 'abn_ideal';
 
     /**
      * Voucher-based payment
      */
     const CASHU = 'cashu';
+
+    /**
+     * Wallet-based payment
+     */
+    const EZEEWALLET = 'ezeewallet';
+
+    /**
+     * Neteller
+     */
+    const NETELLER = 'neteller';
+
+    /**
+     * Bank transfer, popular in China
+     */
+    const PAYBYVOUCHER = 'paybyvoucher';
 
     /**
      * Voucher-based payment
@@ -122,17 +137,12 @@ class Types
     const PPRO = 'ppro';
 
     /**
-     * Bank transfer, popular in China
+     * Bank transfer payment, popular in Germany
      */
-    const PAYBYVOUCHER = 'paybyvoucher';
+    const SOFORT = 'sofort';
 
     /**
-     * Account Verification
+     * Bank transfer, popular in Netherlands (via SOFORT)
      */
-    const ACCOUNT_VERIFICATION = 'account_verification';
-
-    /**
-     * Address Verification
-     */
-    const AVS = 'avs';
+    const SOFORT_IDEAL = 'sofort_ideal';
 }

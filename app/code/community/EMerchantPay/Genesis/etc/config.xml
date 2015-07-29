@@ -19,7 +19,7 @@ GNU General Public License for more details.
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.2.3</version>
+         <version>1.2.4</version>
        </EMerchantPay_Genesis>
     </modules>
 

@@ -18,11 +18,11 @@
  */
 
 /**
- * Class EMerchantPay_Genesis_Model_Admin_Transaction_Type
+ * Class EMerchantPay_Genesis_Model_Admin_Direct_Options_Transaction_Type
  *
  * Admin options Drop-down for Genesis Transaction Types
  */
-class EMerchantPay_Genesis_Model_Admin_Options_Transaction_Type
+class EMerchantPay_Genesis_Model_Admin_Direct_Options_Transaction_Type
 {
     /**
      * Pre-load the required files

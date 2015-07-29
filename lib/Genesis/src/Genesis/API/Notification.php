@@ -52,20 +52,6 @@ class Notification
     private $reconciliationObj;
 
     /**
-     * Flag, if this notification is for an API transaction
-     *
-     * @var bool
-     */
-    private $isAPINotification;
-
-    /**
-     * Flag, if this notification is for a WPF transaction
-     *
-     * @var bool
-     */
-    private $isWPFNotification;
-
-    /**
      * Initialize the object with notification data
      *
      * @param $data
@@ -89,17 +75,24 @@ class Notification
      */
     public function parseNotification($notification = array(), $authenticate = true)
     {
+        $notificationWalk = array();
+
+        array_walk($notification, function ($val, $key) use (&$notificationWalk) {
+            $key = trim(rawurldecode($key));
+            $val = trim(rawurldecode($val));
+
+            $notificationWalk[$key] = $val;
+        });
+
+        $notification = $notificationWalk;
+
         $this->notificationObj = \Genesis\Utils\Common::createArrayObject($notification);
 
-        if (isset($this->notificationObj->unique_id) && !empty($this->notificationObj->unique_id)) {
-            $this->isAPINotification = true;
-
+        if ($this->isAPINotification()) {
             $this->unique_id = (string)$this->notificationObj->unique_id;
         }
 
-        if (isset($this->notificationObj->wpf_unique_id) && !empty($this->notificationObj->wpf_unique_id)) {
-            $this->isWPFNotification = true;
-
+        if ($this->isWPFNotification()) {
             $this->unique_id = (string)$this->notificationObj->wpf_unique_id;
         }
 
@@ -134,7 +127,7 @@ class Notification
             // This is reconciliation, don't throw on ErrorAPI
         }
 
-        $this->reconciliationObj = $request->response()->getResponseObject();
+        return $this->reconciliationObj = $request->response()->getResponseObject();
     }
 
     /**
@@ -172,23 +165,23 @@ class Notification
     }
 
     /**
-     * Is this a 3D notification?
+     * Is this API notification?
      *
      * @return bool
      */
     public function isAPINotification()
     {
-        return (bool)$this->isAPINotification;
+        return (bool)(isset($this->notificationObj->unique_id) && !empty($this->notificationObj->unique_id));
     }
 
     /**
-     * Is this WPF Notification
+     * Is this WPF Notification?
      *
      * @return bool
      */
     public function isWPFNotification()
     {
-        return (bool)$this->isWPFNotification;
+        return (bool)(isset($this->notificationObj->wpf_unique_id) && !empty($this->notificationObj->wpf_unique_id));
     }
 
     /**
@@ -219,11 +212,11 @@ class Notification
      */
     public function generateResponse()
     {
-        $type = $this->isWPFNotification() ? 'wpf_unique_id' : 'unique_id';
+        $uniqueId = $this->isWPFNotification() ? 'wpf_unique_id' : 'unique_id';
 
         $structure = array(
             'notification_echo' => array(
-                $type => $this->unique_id,
+                $uniqueId => $this->unique_id,
             )
         );
 

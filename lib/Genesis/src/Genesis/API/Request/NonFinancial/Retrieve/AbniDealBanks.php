@@ -20,23 +20,17 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
-namespace Genesis\API\Request\NonFinancial\Reconcile;
+namespace Genesis\API\Request\NonFinancial\Retrieve;
 
 /**
- * Reconcile request by transaction id
+ * Class AbniDealBanks
  *
- * @package    Genesis
- * @subpackage Request
+ * Retrieve the available Banks for iDEAL payment via ABN
+ *
+ * @package Genesis\API\Request\NonFinancial\Retrieve
  */
-class Transaction extends \Genesis\API\Request
+class AbniDealBanks extends \Genesis\API\Request
 {
-    /**
-     * Unique id of an existing transaction
-     *
-     * @var string
-     */
-    protected $unique_id;
-
     /**
      * Set the per-request configuration
      *
@@ -45,42 +39,12 @@ class Transaction extends \Genesis\API\Request
     protected function initConfiguration()
     {
         $this->config = \Genesis\Utils\Common::createArrayObject(array(
-                'protocol' => 'https',
-                'port'     => 443,
-                'type'     => 'POST',
-                'format'   => 'xml',
-            ));
+                                                                     'protocol' => 'https',
+                                                                     'port'     => 443,
+                                                                     'type'     => 'GET',
+                                                                     'format'   => 'plain',
+                                                                 ));
 
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'reconcile', \Genesis\Config::getToken()));
-    }
-
-    /**
-     * Set the required fields
-     *
-     * @return void
-     */
-    protected function setRequiredFields()
-    {
-        $requiredFields = array(
-            'unique_id',
-        );
-
-        $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
-    }
-
-    /**
-     * Create the request's Tree structure
-     *
-     * @return void
-     */
-    protected function populateStructure()
-    {
-        $treeStructure = array(
-            'reconcile' => array(
-                'unique_id' => $this->unique_id,
-            )
-        );
-
-        $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
+        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'retrieve_abn_ideal_banks', false));
     }
 }

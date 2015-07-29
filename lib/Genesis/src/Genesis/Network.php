@@ -32,7 +32,8 @@ class Network
 {
     /**
      * Instance of the selected network wrapper
-     * @var object
+     *
+     * @var mixed
      */
     private $context;
 
@@ -93,7 +94,8 @@ class Network
      */
     public function setApiCtxData($apiContext)
     {
-        $this->context->prepareRequestBody(array(
+        $this->context->prepareRequestBody(
+            array(
                 'body'       => $apiContext->getDocument(),
                 'url'        => $apiContext->getApiConfig('url'),
                 'type'       => $apiContext->getApiConfig('type'),
@@ -102,9 +104,9 @@ class Network
                 'timeout'    => \Genesis\Config::getNetworkTimeout(),
                 'ca_bundle'  => \Genesis\Config::getCertificateBundle(),
                 'user_agent' => sprintf('Genesis PHP Client v%s', \Genesis\Config::getVersion()),
-                'user_login' => sprintf('%s:%s', \Genesis\Config::getUsername(),
-                    \Genesis\Config::getPassword()),
-            ));
+                'user_login' => sprintf('%s:%s', \Genesis\Config::getUsername(), \Genesis\Config::getPassword()),
+            )
+        );
     }
 
     /**
