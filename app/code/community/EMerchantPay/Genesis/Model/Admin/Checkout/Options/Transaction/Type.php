@@ -72,8 +72,6 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
                 Mage::helper('emerchantpay')->__('Authorize (3D-Secure)'),
             \Genesis\API\Constants\Transaction\Types::CASHU =>
                 Mage::helper('emerchantpay')->__('CashU'),
-            \Genesis\API\Constants\Payment\Methods::ELV =>
-                Mage::helper('emerchantpay')->__('ELV'),
             \Genesis\API\Constants\Payment\Methods::EPS =>
                 Mage::helper('emerchantpay')->__('eps'),
             \Genesis\API\Constants\Payment\Methods::GIRO_PAY =>

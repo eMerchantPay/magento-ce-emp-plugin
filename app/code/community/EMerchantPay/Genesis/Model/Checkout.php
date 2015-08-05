@@ -578,8 +578,6 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
         );
 
         $alias_map = array(
-            \Genesis\API\Constants\Payment\Methods::ELV         =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::EPS         =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::GIRO_PAY    =>
