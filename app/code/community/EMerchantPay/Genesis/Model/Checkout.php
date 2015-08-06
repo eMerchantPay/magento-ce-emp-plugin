@@ -538,8 +538,14 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                         case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
                             $payment->registerAuthorizationNotification($payment_transaction->amount, true);
                             break;
+                        case \Genesis\API\Constants\Transaction\Types::ABNIDEAL:
+                        case \Genesis\API\Constants\Transaction\Types::CASHU:
+                        case \Genesis\API\Constants\Transaction\Types::NETELLER:
+                        case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
+                        case \Genesis\API\Constants\Transaction\Types::PPRO:
                         case \Genesis\API\Constants\Transaction\Types::SALE:
                         case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+                        case \Genesis\API\Constants\Transaction\Types::SOFORT:
                             $payment->registerCaptureNotification($payment_transaction->amount, true);
                             break;
                         default:
