@@ -82,8 +82,14 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
                 Mage::helper('emerchantpay')->__('Qiwi'),
             \Genesis\API\Constants\Transaction\Types::PAYSAFECARD =>
                 Mage::helper('emerchantpay')->__('PaySafeCard'),
+            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE =>
+                Mage::helper('emerchantpay')->__('PayByVoucher (Sale)'),
+            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY =>
+                Mage::helper('emerchantpay')->__('PayByVoucher (oBeP)'),
             \Genesis\API\Constants\Payment\Methods::PRZELEWY24 =>
                 Mage::helper('emerchantpay')->__('Przelewy24'),
+            \Genesis\API\Constants\Transaction\Types::POLI =>
+                Mage::helper('emerchantpay')->__('POLi'),
             \Genesis\API\Constants\Payment\Methods::SAFETY_PAY =>
                 Mage::helper('emerchantpay')->__('SafetyPay'),
             \Genesis\API\Constants\Transaction\Types::SALE =>
@@ -96,6 +102,8 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
                 Mage::helper('emerchantpay')->__('TeleIngreso'),
             \Genesis\API\Constants\Payment\Methods::TRUST_PAY =>
                 Mage::helper('emerchantpay')->__('TrustPay'),
+            \Genesis\API\Constants\Transaction\Types::WEBMONEY =>
+                Mage::helper('emerchantpay')->__('WebMoney'),
         );
     }
 }
