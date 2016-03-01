@@ -395,7 +395,7 @@ class Authorize3D extends \Genesis\API\Request
                 'format'   => 'xml',
             ));
 
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', true));
+        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
     }
 
     /**
@@ -421,16 +421,13 @@ class Authorize3D extends \Genesis\API\Request
             'notification_url'   => array('return_success_url', 'return_failure_url'),
             'return_success_url' => array('notification_url', 'return_failure_url'),
             'return_failure_url' => array('notification_url', 'return_success_url'),
-            'mpi_cavv'           => array('mpi_eci', 'mpi_xid'),
-            'mpi_eci'            => array('mpi_cavv', 'mpi_xid'),
-            'mpi_xid'            => array('mpi_cavv', 'mpi_eci'),
         );
 
         $this->requiredFieldsConditional = \Genesis\Utils\Common::createArrayObject($requiredFieldsConditional);
 
         $requiredFieldsGroups = array(
             'synchronous'  => array('notification_url', 'return_success_url', 'return_failure_url'),
-            'asynchronous' => array('mpi_cavv', 'mpi_eci', 'mpi_xid'),
+            'asynchronous' => array( 'mpi_eci'),
         );
 
         $this->requiredFieldsGroups = \Genesis\Utils\Common::createArrayObject($requiredFieldsGroups);
@@ -454,10 +451,13 @@ class Authorize3D extends \Genesis\API\Request
                 'notification_url'          => $this->notification_url,
                 'return_success_url'        => $this->return_success_url,
                 'return_failure_url'        => $this->return_failure_url,
-                'amount'                    => $this->transform('amount', array(
+                'amount'                    => $this->transform(
+                    'amount',
+                    array(
                         $this->amount,
                         $this->currency,
-                    )),
+                    )
+                ),
                 'currency'                  => $this->currency,
                 'card_holder'               => $this->card_holder,
                 'card_number'               => $this->card_number,

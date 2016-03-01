@@ -18,11 +18,11 @@
  */
 
 /**
- * Class EMerchantPay_Genesis_Model_Admin_Options_Environment
+ * Class EMerchantPay_Genesis_Model_Admin_Environment
  *
  * Admin options Drop-down for Gateway environment
  */
-class EMerchantPay_Genesis_Model_Admin_Options_Environment
+class EMerchantPay_Genesis_Model_Admin_Environment
 {
     /**
      * Return the environment types for an Options field

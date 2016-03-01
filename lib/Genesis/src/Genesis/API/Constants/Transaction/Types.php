@@ -32,6 +32,16 @@ namespace Genesis\API\Constants\Transaction;
 class Types
 {
     /**
+     * Address Verification
+     */
+    const AVS = 'avs';
+
+    /**
+     * Account Verification
+     */
+    const ACCOUNT_VERIFICATION = 'account_verification';
+
+    /**
      * A standard Authorization
      */
     const AUTHORIZE = 'authorize';
@@ -92,24 +102,44 @@ class Types
     const RECURRING_SALE = 'recurring_sale';
 
     /**
-     * Wallet-based payment
+     * Bank transfer, popular in Netherlands (via ABN)
      */
-    const EZEEWALLET = 'ezeewallet';
-
-    /**
-     * Bank transfer payment, popular in Germany
-     */
-    const SOFORT = 'sofort';
-
-    /**
-     * Bank transfer, popular in Netherlands
-     */
-    const SOFORT_IDEAL = 'sofort_ideal';
+    const ABNIDEAL = 'abn_ideal';
 
     /**
      * Voucher-based payment
      */
     const CASHU = 'cashu';
+
+    /**
+     * Wallet-based payment
+     */
+    const EZEEWALLET = 'ezeewallet';
+
+    /**
+     * Neteller
+     */
+    const NETELLER = 'neteller';
+
+    /**
+     * POLi is Australia's most popular online real time debit payment system.
+     */
+    const POLI = 'poli';
+
+    /**
+     * WebMoney is a global settlement system and environment for online business activities.
+     */
+    const WEBMONEY = 'webmoney';
+
+    /**
+     * PayByVouchers via oBeP
+     */
+    const PAYBYVOUCHER_YEEPAY = 'paybyvoucher_yeepay';
+
+    /**
+     * PayByVouchers via Credit/Debit Cards
+     */
+    const PAYBYVOUCHER_SALE = 'paybyvoucher_sale';
 
     /**
      * Voucher-based payment
@@ -122,17 +152,7 @@ class Types
     const PPRO = 'ppro';
 
     /**
-     * Bank transfer, popular in China
+     * Bank transfer payment, popular in Germany
      */
-    const PAYBYVOUCHER = 'paybyvoucher';
-
-    /**
-     * Account Verification
-     */
-    const ACCOUNT_VERIFICATION = 'account_verification';
-
-    /**
-     * Address Verification
-     */
-    const AVS = 'avs';
+    const SOFORT = 'sofort';
 }

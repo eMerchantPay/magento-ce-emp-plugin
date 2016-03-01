@@ -240,14 +240,16 @@ class Payout extends \Genesis\API\Request
      */
     protected function initConfiguration()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(array(
+        $this->config = \Genesis\Utils\Common::createArrayObject(
+            array(
                 'protocol' => 'https',
                 'port'     => 443,
                 'type'     => 'POST',
                 'format'   => 'xml',
-            ));
+            )
+        );
 
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', true));
+        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
     }
 
     /**
@@ -282,10 +284,13 @@ class Payout extends \Genesis\API\Request
                 'transaction_type' => \Genesis\API\Constants\Transaction\Types::PAYOUT,
                 'transaction_id'   => $this->transaction_id,
                 'usage'            => $this->usage,
-                'amount'           => $this->transform('amount', array(
+                'amount'           => $this->transform(
+                    'amount',
+                    array(
                         $this->amount,
                         $this->currency,
-                    )),
+                    )
+                ),
                 'currency'         => $this->currency,
                 'remote_ip'        => $this->remote_ip,
                 'card_holder'      => $this->card_holder,

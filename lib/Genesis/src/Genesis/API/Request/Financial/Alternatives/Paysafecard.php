@@ -291,14 +291,16 @@ class Paysafecard extends \Genesis\API\Request
      */
     protected function initConfiguration()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(array(
+        $this->config = \Genesis\Utils\Common::createArrayObject(
+            array(
                 'protocol' => 'https',
                 'port'     => 443,
                 'type'     => 'POST',
                 'format'   => 'xml',
-            ));
+            )
+        );
 
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', true));
+        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
     }
 
     /**
@@ -336,10 +338,13 @@ class Paysafecard extends \Genesis\API\Request
                 'remote_ip'          => $this->remote_ip,
                 'return_success_url' => $this->return_success_url,
                 'return_failure_url' => $this->return_failure_url,
-                'amount'             => $this->transform('amount', array(
+                'amount'             => $this->transform(
+                    'amount',
+                    array(
                         $this->amount,
                         $this->currency,
-                    )),
+                    )
+                ),
                 'currency'           => $this->currency,
                 'customer_email'     => $this->customer_email,
                 'customer_phone'     => $this->customer_phone,

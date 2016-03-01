@@ -147,11 +147,11 @@ class Stream implements \Genesis\Interfaces\Network
 
         // Note: PHP does NOT support SAN certs on PHP version < 5.6
         if (\Genesis\Utils\Common::compareVersions('5.6.0', '<')) {
-            $contextOptions['ssl']['CN_match'] = $url['host'];
-            $contextOptions['ssl']['SNI_server_name'] = $url['host'];
+            $contextOptions['ssl']['CN_match']          = $url['host'];
+            $contextOptions['ssl']['SNI_server_name']   = $url['host'];
         } else {
-            $contextOptions['ssl']['peer_name'] = $url['host'];
-            $contextOptions['ssl']['verify_peer_name'] = true;
+            $contextOptions['ssl']['peer_name']         = $url['host'];
+            $contextOptions['ssl']['verify_peer_name']  = true;
         }
 
         $this->streamContext = stream_context_create($contextOptions);
@@ -225,22 +225,16 @@ class Stream implements \Genesis\Interfaces\Network
             'DHE-RSA-AES256-SHA256',
             'DHE-DSS-AES256-SHA',
             'DHE-RSA-AES256-SHA',
-            'AES128-GCM-SHA256',
-            'AES256-GCM-SHA384',
-            'ECDHE-RSA-RC4-SHA',
-            'ECDHE-ECDSA-RC4-SHA',
-            'AES128',
-            'AES256',
-            'RC4-SHA',
-            'HIGH',
             '!aNULL',
             '!eNULL',
             '!EXPORT',
             '!DES',
             '!3DES',
             '!MD5',
+            '!RC4',
             '!PSK',
             '!SSLv2',
+            '!SSLv3'
         );
     }
 }

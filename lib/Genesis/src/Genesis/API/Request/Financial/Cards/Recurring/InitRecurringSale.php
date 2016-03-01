@@ -343,14 +343,16 @@ class InitRecurringSale extends \Genesis\API\Request
      */
     protected function initConfiguration()
     {
-        $this->config = \Genesis\Utils\Common::createArrayObject(array(
+        $this->config = \Genesis\Utils\Common::createArrayObject(
+            array(
                 'protocol' => 'https',
                 'port'     => 443,
                 'type'     => 'POST',
                 'format'   => 'xml',
-            ));
+            )
+        );
 
-        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', true));
+        $this->setApiConfig('url', $this->buildRequestURL('gateway', 'process', \Genesis\Config::getToken()));
     }
 
     /**
@@ -388,10 +390,13 @@ class InitRecurringSale extends \Genesis\API\Request
                 'gaming'                    => $this->gaming,
                 'moto'                      => $this->moto,
                 'remote_ip'                 => $this->remote_ip,
-                'amount'                    => $this->transform('amount', array(
+                'amount'                    => $this->transform(
+                    'amount',
+                    array(
                         $this->amount,
                         $this->currency,
-                    )),
+                    )
+                ),
                 'currency'                  => $this->currency,
                 'card_holder'               => $this->card_holder,
                 'card_number'               => $this->card_number,
