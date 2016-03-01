@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition* > 1.7
-* GenesisPHP 1.2
+* [GenesisPHP v1.4](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
 * PCI-certified server in order to use ```eMerchantPay Direct```
 
 *Note: this module has been tested only with Magento __Community Edition__, it may not work
@@ -38,8 +38,10 @@ Installation (via Modman)
 Installation (manual)
 ---------------------
 
-* Copy the files to the root folder of your Magento installation
-* Login inside the Admin Panel and go to ```System``` -> ```Configuration``` -> ```Payment Methods```
+* Upload the contents of the folder (excluding ```README.md```) to the ```<root>``` folder of your Magento installation
+* Login inside the __Admin Panel__ and go to ```System``` -> ```Configuration``` -> ```Payment Methods```
+* If one of the Payment Methods ```eMerchantPay Direct``` or ```eMerchantPay Checkout``` is not yet available, 
+  go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
 * Check ```Enable```, set the correct credentials, select your prefered payment method and click ```Save config```
 
 You're now ready to process payments through our gateway.
