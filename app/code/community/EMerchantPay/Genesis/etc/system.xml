@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2015 eMerchantPay Ltd.
+Copyright (C) 2016 eMerchantPay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 @author      eMerchantPay
-@copyright   2015 eMerchantPay Ltd.
+@copyright   2016 eMerchantPay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <config>
@@ -22,6 +22,12 @@ GNU General Public License for more details.
             <groups>
                 <emerchantpay_direct translate="label" module="emerchantpay">
                     <label>eMerchantPay Direct</label>
+                    <comment>
+                        <![CDATA[
+                            Direct API - allow customers to enter their CreditCard information on your website.
+                            Note: You need PCI-DSS certificate in order to enable this payment method.
+                        ]]>
+                    </comment>
                     <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
@@ -35,6 +41,8 @@ GNU General Public License for more details.
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
                         </active>
                         <title translate="label">
                             <label>Title</label>
@@ -43,35 +51,69 @@ GNU General Public License for more details.
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
                         </title>
-                        <genesis_token translate="label">
-                            <label>Token</label>
+                        <genesis_username translate="label">
+                            <label>Username</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Username, required for accessing the Genesis Gateway
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>03</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </genesis_token>
-                        <genesis_username translate="label">
-                            <label>Username</label>
+                            <validate>required-entry validate-alphanum</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </genesis_username>
+                        <genesis_password translate="label">
+                            <label>Password</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Password, required for accessing the Genesis Gateway
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>04</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </genesis_username>
-                        <genesis_password translate="label">
-                            <label>Password</label>
+                            <validate>required-entry validate-alphanum</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </genesis_password>
+                        <genesis_token translate="label">
+                            <label>Token</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Token, required for accessing the Genesis Gateway
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>05</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </genesis_password>
+                            <validate>required-entry validate-alphanum</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </genesis_token>
                         <genesis_environment translate="label">
                             <label>Test Mode</label>
                             <comment>
-                                If enabled, your transactions are forwarded to our test (staging) environment.
+                                <![CDATA[
+                                    If enabled, your transactions are forwarded to our test (staging) environment.
+                                ]]>
                             </comment>
                             <frontend_type>select</frontend_type>
                             <source_model>emerchantpay/admin_environment</source_model>
@@ -79,11 +121,16 @@ GNU General Public License for more details.
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </genesis_environment>
                         <genesis_type translate="label">
                             <label>Transaction Type</label>
                             <comment>
-                                Select the transaction type for the initial transaction.
+                                <![CDATA[
+                                    Select the transaction type for the initial transaction.
+                                ]]>
                             </comment>
                             <frontend_type>select</frontend_type>
                             <source_model>emerchantpay/admin_direct_options_transaction_type</source_model>
@@ -91,74 +138,215 @@ GNU General Public License for more details.
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </genesis_type>
-                        <order_status translate="label">
-                            <label>New Order Status</label>
+                        <recurring_enabled translate="label">
+                            <label>Enable Recurring</label>
                             <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_order_status_new</source_model>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>08</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </recurring_enabled>
+                        <recurring_transaction_type translate="label">
+                            <label>Init Recurring Transaction Types</label>
+                            <comment>
+                                <![CDATA[
+                                    Select the transaction type that must be attempted during the Customers's Init Recurring Transaction session.
+                                ]]>
+                            </comment>
+                            <frontend_type>select</frontend_type>
+                            <source_model>emerchantpay/admin_direct_options_transaction_recurring_type</source_model>
+                            <sort_order>09</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_transaction_type>
+                        <recurring_initial_fee>
+                            <label>Initial Fee</label>
+                            <comment><![CDATA[
+                                Please, specify the amount for the Initial Recurring Transactions, if
+                                the Product Recurring Initial Fee is not specified
+                                ]]>
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry validate-zero-or-greater</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_initial_fee>
+                        <recurring_scheduler_cron_expr>
+                            <label>Recurring Task Schedule (cron syntax)</label>
+                            <comment><![CDATA[
+                                Specify the time interval for the cron job, which will check
+                                if there is a recurring profile waiting to be charged
+                                (It should not be more than 1 Day.
+                                Ex. "*/30 * * * *" means that the cron job will be executed every 30 minutes
+                                ]]>
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>11</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_scheduler_cron_expr>
+                        <cron_recurring_log_file translate="label">
+                            <label>Recurring Job Log File</label>
+                            <comment>
+                                <![CDATA[
+                                    Default: "emerchantpay-recurring.log"
+                                    Keep empty to disable logging
+                                ]]>
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>12</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </cron_recurring_log_file>
+                        <order_status translate="label">
+                            <label>New Order Status</label>
+                            <comment>
+                                <![CDATA[
+                                    Select the default order status for new orders.
+                                ]]>
+                            </comment>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_order_status_new</source_model>
+                            <sort_order>13</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </order_status>
                         <allowspecific translate="label">
                             <label>Payment from Applicable Countries</label>
                             <frontend_type>allowspecific</frontend_type>
-                            <sort_order>10</sort_order>
+                            <sort_order>14</sort_order>
                             <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </allowspecific>
                         <specificcountry translate="label">
                             <label>Payment from Specific Countries</label>
                             <frontend_type>multiselect</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>15</sort_order>
                             <source_model>adminhtml/system_config_source_country</source_model>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <can_be_empty>1</can_be_empty>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <allowspecific>1</allowspecific>
+                            </depends>
                         </specificcountry>
                         <cctypes translate="label">
                             <label>Credit Card Types</label>
                             <frontend_type>multiselect</frontend_type>
                             <source_model>adminhtml/system_config_source_payment_cctype</source_model>
-                            <sort_order>12</sort_order>
+                            <sort_order>16</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <can_be_empty>1</can_be_empty>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </cctypes>
                         <min_order_total translate="label">
                             <label>Minimum Order Total</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>13</sort_order>
+                            <sort_order>17</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>validate-zero-or-greater</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </min_order_total>
                         <max_order_total translate="label">
                             <label>Maximum Order Total</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>14</sort_order>
+                            <sort_order>18</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>validate-zero-or-greater</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </max_order_total>
                         <sort_order translate="label">
                             <label>Sort Order</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>15</sort_order>
+                            <sort_order>19</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                             <frontend_class>validate-number</frontend_class>
+                            <validate>validate-zero-or-greater</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </sort_order>
                     </fields>
                 </emerchantpay_direct>
                 <emerchantpay_checkout translate="label" module="emerchantpay">
                     <label>eMerchantPay Checkout</label>
+                    <comment>
+                        <![CDATA[
+                            Checkout payment method - receive credit-card payments, without the need of PCI-DSS certificate or HTTPS.
+                            Note: Upon checkout, the customer will be redirected to a secure payment form, located on our servers and we will notify you, once the payment reached a final status
+                        ]]>
+                    </comment>
                     <sort_order>10</sort_order>
                     <show_in_default>1</show_in_default>
                     <show_in_website>1</show_in_website>
@@ -180,27 +368,51 @@ GNU General Public License for more details.
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
                         </title>
                         <genesis_username translate="label">
                             <label>Username</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Username, required for accessing the Genesis Gateway
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>03</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry validate-alphanum</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </genesis_username>
                         <genesis_password translate="label">
                             <label>Password</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Password, required for accessing the Genesis Gateway
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>04</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry validate-alphanum</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </genesis_password>
                         <genesis_environment translate="label">
                             <label>Test Mode</label>
                             <comment>
-                                If enabled, your transactions are forwarded to our test (staging) environment.
+                                <![CDATA[
+                                    If enabled, your transactions are forwarded to our test (staging) environment.
+                                ]]>
                             </comment>
                             <frontend_type>select</frontend_type>
                             <source_model>emerchantpay/admin_environment</source_model>
@@ -208,12 +420,17 @@ GNU General Public License for more details.
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </genesis_environment>
                         <genesis_types translate="label">
                             <label>Transaction Types</label>
                             <comment>
-                                Select the transaction types that must be attempted during the customer's Checkout session.
-                                The first transaction type that is available will be selected by the gateway.
+                                <![CDATA[
+                                    Select the transaction types that must be attempted during the customer's Checkout session.
+                                    The first transaction type that is available will be selected by the gateway.
+                                ]]>
                             </comment>
                             <frontend_type>multiselect</frontend_type>
                             <source_model>emerchantpay/admin_checkout_options_transaction_type</source_model>
@@ -222,59 +439,191 @@ GNU General Public License for more details.
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                             <can_be_empty>1</can_be_empty>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </genesis_types>
-                        <order_status translate="label">
-                            <label>New Order Status</label>
+                        <recurring_enabled translate="label">
+                            <label>Enable Recurring</label>
                             <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_order_status_new</source_model>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>07</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </order_status>
-                        <allowspecific translate="label">
-                            <label>Payment from Applicable Countries</label>
-                            <frontend_type>allowspecific</frontend_type>
-                            <sort_order>08</sort_order>
-                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </allowspecific>
-                        <specificcountry translate="label">
-                            <label>Payment from Specific Countries</label>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </recurring_enabled>
+                        <recurring_transaction_types translate="label">
+                            <label>Init Recurring Transaction Types</label>
+                            <comment>
+                                <![CDATA[
+                                    Select the transaction types that must be attempted during the Customers's Init Recurring Transaction session.
+                                    The first transaction type that is available will be selected by the gateway.
+                                ]]>
+                            </comment>
                             <frontend_type>multiselect</frontend_type>
-                            <sort_order>09</sort_order>
-                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <source_model>emerchantpay/admin_checkout_options_transaction_recurring_type</source_model>
+                            <sort_order>08</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <can_be_empty>1</can_be_empty>
-                        </specificcountry>
-                        <min_order_total translate="label">
-                            <label>Minimum Order Total</label>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_transaction_types>
+                        <recurring_initial_fee>
+                            <label>Initial Fee</label>
+                            <comment><![CDATA[
+                                Please, specify the amount for the Initial Recurring Transactions, if
+                                the Product Recurring Initial Fee is not specified
+                                ]]>
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>09</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry validate-zero-or-greater</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_initial_fee>
+                        <recurring_scheduler_cron_expr>
+                            <label>Recurring Task Schedule (cron syntax)</label>
+                            <comment><![CDATA[
+                                Specify the time interval for the cron job, which will check
+                                if there is a recurring profile waiting to be charged
+                                (It should not be more than 1 Day.
+                                Ex. "*/30 * * * *" means that the cron job will be executed every 30 minutes
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>10</sort_order>
                             <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
+                            <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                        </min_order_total>
-                        <max_order_total translate="label">
-                            <label>Maximum Order Total</label>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_scheduler_cron_expr>
+                        <cron_recurring_log_file translate="label">
+                            <label>Recurring Job Log File</label>
+                            <comment>
+                                <![CDATA[
+                                    Default: "emerchantpay-recurring.log"
+                                    Keep empty to disable logging
+                                ]]>
+                            </comment>
                             <frontend_type>text</frontend_type>
                             <sort_order>11</sort_order>
                             <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </max_order_total>
-                        <sort_order translate="label">
-                            <label>Sort Order</label>
-                            <frontend_type>text</frontend_type>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </cron_recurring_log_file>
+                        <order_status translate="label">
+                            <label>New Order Status</label>
+                            <comment>
+                                <![CDATA[
+                                    Select the default order status for new orders.
+                                ]]>
+                            </comment>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_order_status_new</source_model>
                             <sort_order>12</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </order_status>
+                        <allowspecific translate="label">
+                            <label>Payment from Applicable Countries</label>
+                            <frontend_type>allowspecific</frontend_type>
+                            <sort_order>13</sort_order>
+                            <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </allowspecific>
+                        <specificcountry translate="label">
+                            <label>Payment from Specific Countries</label>
+                            <frontend_type>multiselect</frontend_type>
+                            <sort_order>14</sort_order>
+                            <source_model>adminhtml/system_config_source_country</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>required-entry</validate>
+                            <can_be_empty>0</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <allowspecific>1</allowspecific>
+                            </depends>
+                        </specificcountry>
+                        <min_order_total translate="label">
+                            <label>Minimum Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>15</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>validate-zero-or-greater</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </min_order_total>
+                        <max_order_total translate="label">
+                            <label>Maximum Order Total</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>16</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>validate-zero-or-greater</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
+                        </max_order_total>
+                        <sort_order translate="label">
+                            <label>Sort Order</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>17</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
                             <frontend_class>validate-number</frontend_class>
+                            <validate>validate-zero-or-greater</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                            </depends>
                         </sort_order>
                     </fields>
                 </emerchantpay_checkout>

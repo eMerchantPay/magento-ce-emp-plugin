@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015 eMerchantPay Ltd.
+ * Copyright (C) 2016 eMerchantPay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      eMerchantPay
- * @copyright   2015 eMerchantPay Ltd.
+ * @copyright   2016 eMerchantPay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -69,11 +69,16 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
                 if (isset($reconcile->unique_id)) {
                     $this->direct->processNotification($reconcile);
 
+                    $this->getResponse()->clearHeaders();
+                    $this->getResponse()->clearBody();
+
                     $this->getResponse()->setHeader('Content-type', 'application/xml');
 
                     $this->getResponse()->setBody(
                         $notification->generateResponse()
                     );
+
+                    $this->getResponse()->setHttpResponseCode(200);
                 }
             }
         } catch (Exception $exception) {
@@ -90,8 +95,6 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
      */
     public function redirectAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->getResponse()->setBody(
             $this->getLayout()->createBlock('emerchantpay/redirect_direct')->toHtml()
         );
@@ -106,8 +109,6 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
      */
     public function successAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->_redirect('checkout/onepage/success', array('_secure' => true));
     }
 
@@ -120,8 +121,6 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
      */
     public function failureAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->helper->restoreQuote();
 
         $this->helper->getCheckoutSession()->addError(

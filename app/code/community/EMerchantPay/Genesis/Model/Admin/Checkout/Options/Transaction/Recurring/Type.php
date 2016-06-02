@@ -18,11 +18,11 @@
  */
 
 /**
- * Class EMerchantPay_Genesis_Model_Admin_Direct_Options_Transaction_Type
+ * Class EMerchantPay_Genesis_Model_Admin_Transaction_Type
  *
  * Admin options Drop-down for Genesis Transaction Types
  */
-class EMerchantPay_Genesis_Model_Admin_Direct_Options_Transaction_Type
+class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Recurring_Type
 {
     /**
      * Pre-load the required files
@@ -34,6 +34,7 @@ class EMerchantPay_Genesis_Model_Admin_Direct_Options_Transaction_Type
 
         $helper->initLibrary();
     }
+
     /**
      * Return the transaction types for an Options field
      *
@@ -64,14 +65,10 @@ class EMerchantPay_Genesis_Model_Admin_Direct_Options_Transaction_Type
     protected function getTransactionTypes()
     {
         return array(
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE =>
-                Mage::helper('emerchantpay')->__('Authorize'),
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D =>
-                Mage::helper('emerchantpay')->__('Authorize (3D-Secure)'),
-            \Genesis\API\Constants\Transaction\Types::SALE =>
-                Mage::helper('emerchantpay')->__('Sale'),
-            \Genesis\API\Constants\Transaction\Types::SALE_3D =>
-                Mage::helper('emerchantpay')->__('Sale (3D-Secure)'),
+            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE =>
+                Mage::helper('emerchantpay')->__('Init Recurring Sale'),
+            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D =>
+                Mage::helper('emerchantpay')->__('Init Recurring Sale (3D-Secure)')
         );
     }
 }

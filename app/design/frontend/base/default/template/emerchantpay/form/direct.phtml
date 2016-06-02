@@ -26,6 +26,19 @@
 ?>
 <?php $_code=$this->getMethodCode() ?>
 <ul class="form-list" id="payment_form_<?php echo $_code ?>" style="display:none;">
+    <?php if ($this->getHasNominalItems()) { ?>
+        <li>
+            <ul class="messages">
+                <li class="notice-msg">
+                    <ul>
+                        <li>
+                            <span><?php echo $this->__("Please have in mind that you are processing a Recurring Transaction!");?></span>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    <?php } ?>
     <li>
         <label for="<?php echo $_code ?>_cc_owner" class="required"><em>*</em><?php echo $this->__('Name on Card') ?></label>
         <div class="input-box">

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2015 eMerchantPay Ltd.
+Copyright (C) 2016 eMerchantPay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -13,13 +13,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 @author      eMerchantPay
-@copyright   2015 eMerchantPay Ltd.
+@copyright   2016 eMerchantPay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.2.5</version>
+         <version>1.2.6</version>
        </EMerchantPay_Genesis>
     </modules>
 
@@ -49,14 +49,22 @@ GNU General Public License for more details.
         </payment>
         
         <events>
-            <emerchantpay_genesis_init_library>
+            <checkout_submit_all_after>
                 <observers>
                     <EMerchantPay_Genesis>
-                        <class>EMerchantPay_Genesis_Observer_GenesisAutoLoader</class>
-                        <method>addAutoLoad</method>
+                        <class>EMerchantPay_Genesis_Observer_CheckoutSubmitAllAfter</class>
+                        <method>handleAction</method>
                     </EMerchantPay_Genesis>
                 </observers>
-            </emerchantpay_genesis_init_library>
+            </checkout_submit_all_after>
+            <sales_quote_address_collect_totals_before>
+                <observers>
+                    <EMerchantPay_Genesis>
+                        <class>EMerchantPay_Genesis_Observer_SalesQuoteAddressCollectTotalsBefore</class>
+                        <method>handleAction</method>
+                    </EMerchantPay_Genesis>
+                </observers>
+            </sales_quote_address_collect_totals_before>
         </events>
         
     </global>
@@ -104,16 +112,47 @@ GNU General Public License for more details.
                 <order_status>pending</order_status>
                 <title>Credit Card (eMerchantPay Direct)</title>
                 <cctypes>VI,MC,SM,AE,DI,JCB,OT</cctypes>
-                <payment_action>authorize</payment_action>
+                <genesis_type>authorize</genesis_type>
+                <recurring_enabled>0</recurring_enabled>
+                <recurring_scheduler_cron_expr>*/30 * * * *</recurring_scheduler_cron_expr>
+                <cron_recurring_log_file>emerchantpay-recurring.log</cron_recurring_log_file>
                 <group>emerchantpay</group>
             </emerchantpay_direct>
             <emerchantpay_checkout>
                 <model>emerchantpay/checkout</model>
-                <order_status>pending</order_status>
                 <title>Credit Card (eMerchantPay Checkout)</title>
                 <payment_action>order</payment_action>
+                <genesis_types>sale</genesis_types>
+                <recurring_enabled>0</recurring_enabled>
+                <recurring_scheduler_cron_expr>*/30 * * * *</recurring_scheduler_cron_expr>
+                <cron_recurring_log_file>emerchantpay-recurring.log</cron_recurring_log_file>
+                <order_status>pending</order_status>
                 <group>emerchantpay</group>
             </emerchantpay_checkout>
          </payment>
     </default>
+
+    <crontab>
+        <jobs>
+            <emerchantpay_direct_charge_recurring_profile>
+                <schedule>
+                    <config_path>payment/emerchantpay_direct/recurring_scheduler_cron_expr</config_path>
+                </schedule>
+
+                <run>
+                    <model>emerchantpay/task_recurring::processDirect</model>
+                </run>
+            </emerchantpay_direct_charge_recurring_profile>
+
+            <emerchantpay_checkout_charge_recurring_profile>
+                <schedule>
+                    <config_path>payment/emerchantpay_checkout/recurring_scheduler_cron_expr</config_path>
+                </schedule>
+
+                <run>
+                    <model>emerchantpay/task_recurring::processCheckout</model>
+                </run>
+            </emerchantpay_checkout_charge_recurring_profile>
+        </jobs>
+    </crontab>
 </config>

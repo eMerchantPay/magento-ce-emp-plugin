@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015 eMerchantPay Ltd.
+ * Copyright (C) 2016 eMerchantPay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      eMerchantPay
- * @copyright   2015 eMerchantPay Ltd.
+ * @copyright   2016 eMerchantPay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -69,11 +69,16 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
                 if (isset($reconcile->unique_id)) {
                     $this->checkout->processNotification($reconcile);
 
+                    $this->getResponse()->clearHeaders();
+                    $this->getResponse()->clearBody();
+
                     $this->getResponse()->setHeader('Content-type', 'application/xml');
 
                     $this->getResponse()->setBody(
                         $notification->generateResponse()
                     );
+
+                    $this->getResponse()->setHttpResponseCode(200);
                 }
             }
         } catch (Exception $exception) {
@@ -92,8 +97,6 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function redirectAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->getResponse()->setBody(
             $this->getLayout()->createBlock('emerchantpay/redirect_checkout')->toHtml()
         );
@@ -108,8 +111,6 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function successAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->_redirect('checkout/onepage/success', array('_secure' => true));
     }
 
@@ -122,8 +123,6 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function failureAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->helper->restoreQuote();
 
         $this->helper->getCheckoutSession()->addError(
@@ -140,8 +139,6 @@ class EMerchantPay_Genesis_CheckoutController extends Mage_Core_Controller_Front
      */
     public function cancelAction()
     {
-        $this->helper->redirectIfNotLoggedIn();
-
         $this->helper->restoreQuote($shouldCancel = true);
 
         $this->helper->getCheckoutSession()->addSuccess(

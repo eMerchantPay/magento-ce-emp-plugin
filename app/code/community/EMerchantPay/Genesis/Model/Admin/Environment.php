@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015 eMerchantPay Ltd.
+ * Copyright (C) 2016 eMerchantPay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      eMerchantPay
- * @copyright   2015 eMerchantPay Ltd.
+ * @copyright   2016 eMerchantPay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -33,7 +33,7 @@ class EMerchantPay_Genesis_Model_Admin_Environment
     {
         $options = array();
 
-        foreach (static::getEnvironmentOptions() as $code => $name) {
+        foreach ($this->getEnvironmentOptions() as $code => $name) {
             $options[] = array(
                 'value' => $code,
                 'label' => $name
@@ -48,7 +48,7 @@ class EMerchantPay_Genesis_Model_Admin_Environment
      *
      * @return array
      */
-    static function getEnvironmentOptions()
+    protected function getEnvironmentOptions()
     {
         return array(
             'sandbox'       => Mage::helper('emerchantpay')->__('Yes'),

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015 eMerchantPay Ltd.
+ * Copyright (C) 2016 eMerchantPay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      eMerchantPay
- * @copyright   2015 eMerchantPay Ltd.
+ * @copyright   2016 eMerchantPay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -34,6 +34,7 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
 
         $helper->initLibrary();
     }
+
     /**
      * Return the transaction types for an Options field
      *
@@ -43,7 +44,7 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
     {
         $options = array();
 
-        foreach (static::getTransactionTypes() as $code => $name) {
+        foreach ($this->getTransactionTypes() as $code => $name) {
             $options[] = array(
                 'value' => $code,
                 'label' => $name
@@ -61,7 +62,7 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
      *
      * @return array
      */
-    static function getTransactionTypes()
+    protected function getTransactionTypes()
     {
         return array(
             \Genesis\API\Constants\Transaction\Types::ABNIDEAL =>

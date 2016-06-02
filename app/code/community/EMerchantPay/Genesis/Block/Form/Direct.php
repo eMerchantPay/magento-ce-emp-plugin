@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2015 eMerchantPay Ltd.
+ * Copyright (C) 2016 eMerchantPay Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * @author      eMerchantPay
- * @copyright   2015 eMerchantPay Ltd.
+ * @copyright   2016 eMerchantPay Ltd.
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
  */
 
@@ -55,7 +55,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
             $availableTypes = $method->getConfigData('cctypes');
             if ($availableTypes) {
                 $availableTypes = explode(',', $availableTypes);
-                foreach ($types as $code=>$name) {
+                foreach ($types as $code => $name) {
                     if (!in_array($code, $availableTypes)) {
                         unset($types[$code]);
                     }
@@ -106,7 +106,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
     {
         if ($this->getMethod()) {
             $configData = $this->getMethod()->getConfigData('useccv');
-            if(is_null($configData)){
+            if (is_null($configData)) {
                 return true;
             }
             return (bool) $configData;
@@ -126,5 +126,15 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
         ));
 
         return parent::_toHtml();
+    }
+
+    /**
+     * Determines if a Nominal Items were added to the cart
+     * @return bool
+     */
+    public function getHasNominalItems()
+    {
+        return
+            Mage::helper("emerchantpay")->getCheckoutHasRecurringItems();
     }
 }

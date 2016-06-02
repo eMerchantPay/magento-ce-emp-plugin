@@ -7,33 +7,11 @@ Requirements
 ------------
 
 * Magento Community Edition* > 1.7
-* [GenesisPHP v1.4](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
+* [GenesisPHP v1.4.2](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
 * PCI-certified server in order to use ```eMerchantPay Direct```
 
 *Note: this module has been tested only with Magento __Community Edition__, it may not work
 as intended with Magento __Enterprise Edition__
-
-Install GenesisGateway Library
-------------
-
-You should follow these steps to install the __GenesisGateway__ Library if you wish to use more than one Payment Solution, which use GenesisGateway
-
-* Install __Composer__ - [Composer Download Instructions](https://getcomposer.org/doc/00-intro.md)
-
-* Install __GenesisGateway__
-
-    ```sh
-    $ composer require GenesisGateway/genesis_php:1.4@stable
-    ```
-
-* Remove __GenesisGateway__
-
-    ```sh
-    $ composer remove GenesisGateway/genesis_php
-    ```
-
-If you have the correct version of __GenesisGateway__ Library installed on your __Magento CE__, the Payment Module will not use the 
-integrated Library in the Module, but it will connect to the __GenesisGateway__ installed by __Composer__.
 
 GenesisPHP Requirements
 ------------
@@ -46,6 +24,15 @@ GenesisPHP Requirements
     * [Hash](https://php.net/hash)
     * [XMLReader](https://php.net/xmlreader)
     * [XMLWriter](https://php.net/xmlwriter)
+
+Installation (via Magento Connect)
+---------------------
+
+* Navigate to our extention at Magento Connect - [eMerchantPay Payment Gateway - Magento Connect]
+* Click ```Install Now``` and get the ```Extension Key```
+* Login inside the Admin Panel and go to ```System``` -> ```Magento Connect``` -> ```Magento Connect Manager```
+* Paste the ```Extension Key``` and Click ```Install```
+* Wait until the ```Extension``` is downloaded and checked then click on the button ```Proceed``` to start the Installation
 
 Installation (via Modman)
 ---------------------
@@ -66,6 +53,47 @@ Installation (manual)
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
 * Check ```Enable```, set the correct credentials, select your prefered payment method and click ```Save config```
 
+Supported Transactions
+---------------------
+* ```eMerchantPay Direct``` Payment Method
+	* __Authorize__
+	* __Authorize (3D-Secure)__
+	* __InitRecurringSale__
+	* __InitRecurringSale (3D-Secure)__
+	* __RecurringSale__
+	* __Sale__
+	* __Sale (3D-Secure)__
+
+* ```eMerchantPay Checkout``` Payment Method
+    * __ABN iDEAL__
+    * __Authorize__
+    * __Authorize (3D-Secure)__
+    * __CashU__
+    * __InitRecurringSale__
+	* __InitRecurringSale (3D-Secure)__
+    * __Neteller__
+    * __PaySafeCard__
+    * __PayByVoucher (Sale)__
+    * __PayByVoucher (oBeP)__
+    * __POLi__
+    * __PPRO__
+    	* __eps__
+    	* __GiroPay__
+    	* __Qiwi__
+    	* __Przelewy24__
+    	* __SafetyPay__
+    	* __TeleIngreso__
+    	* __TrustPay__
+    * __RecurringSale__
+    * __Sale__
+    * __Sale (3D-Secure)__
+    * __SOFORT__
+    * __WebMoney__
+
+_Note_: If you have trouble with your credentials or terminal configuration, get in touch with our [support] team
+
 You're now ready to process payments through our gateway.
 
 [ModMan]: https://github.com/colinmollenhour/modman
+[eMerchantPay Payment Gateway - Magento Connect]: https://www.magentocommerce.com/magento-connect/catalog/product/view/id/31438/s/emerchantpay-payment-gateway/
+[support]: mailto:tech-support@emerchantpay.net
