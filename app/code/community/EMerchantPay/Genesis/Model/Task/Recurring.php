@@ -149,21 +149,42 @@ class EMerchantPay_Genesis_Model_Task_Recurring
             }
 
             $mustSetUpdateDateToNextPeriod = (bool) $countBillingCycles > 0;
-            $this->chargeRecurringProfile($methodCode, $profile, $mustSetUpdateDateToNextPeriod);
-            $chargedProfiles++;
-            $countBillingCycles++;
+            try {
+                $this->chargeRecurringProfile($methodCode, $profile, $mustSetUpdateDateToNextPeriod);
+                $chargedProfiles++;
+                $countBillingCycles++;
 
-            if ($this->doCheckAndSuspendRecurringProfile($profile, $countBillingCycles)) {
-                $msgChargingProfile =
-                    $this->getHelper()->__("Billing Cycles reached. Suspending Recurring Profile #") .
-                    $profile->getReferenceId();
+                if ($this->doCheckAndSuspendRecurringProfile($profile, $countBillingCycles)) {
+                    $msgChargingProfile =
+                        $this->getHelper()->__("Billing Cycles reached. Suspending Recurring Profile #") .
+                        $profile->getReferenceId();
 
-                $result[] = $msgChargingProfile;
+                    $result[] = $msgChargingProfile;
+
+                    if ($isLogEnabled) {
+                        Mage::log($msgChargingProfile, null, $logFileName);
+                    }
+                }
+            } catch (\Exception $e) {
+                $profile->setState(
+                    Mage_Sales_Model_Recurring_Profile::STATE_SUSPENDED
+                );
+                $profile->save();
+
+                $msgProfileSuspended = $this->getHelper()->__(
+                    sprintf(
+                        "Recurring Profile #%s is set to suspended, because of a failed Recurring Transaction",
+                        $profile->getReferenceId()
+                    )
+                );
+
+                $result[] = $msgProfileSuspended;
 
                 if ($isLogEnabled) {
-                    Mage::log($msgChargingProfile, null, $logFileName);
+                    Mage::log($msgProfileSuspended, null, $logFileName);
                 }
             }
+
         }
 
         if ($chargedProfiles == 0) {

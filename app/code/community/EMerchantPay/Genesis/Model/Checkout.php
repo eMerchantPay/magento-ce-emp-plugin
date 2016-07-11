@@ -678,6 +678,9 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                             break;
                     }
 
+                    $isTransactionApproved =
+                        ($payment_transaction->status == \Genesis\API\Constants\Transaction\States::APPROVED);
+
                     if ($this->getHelper()->getIsTransactionTypeInitRecurring($payment_transaction->transaction_type)) {
                         $recurringProfile = Mage::getModel('sales/recurring_profile')->load(
                             $checkout_transaction->unique_id,
@@ -687,7 +690,10 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                         if ($recurringProfile && $recurringProfile->getId()) {
                             if ($recurringProfile->getState() == Mage_Sales_Model_Recurring_Profile::STATE_PENDING) {
                                 $recurringProfile->setState(
-                                    Mage_Sales_Model_Recurring_Profile::STATE_ACTIVE
+                                    ($isTransactionApproved
+                                        ? Mage_Sales_Model_Recurring_Profile::STATE_ACTIVE
+                                        : Mage_Sales_Model_Recurring_Profile::STATE_CANCELED
+                                    )
                                 );
                                 $recurringProfile->save();
                             }
