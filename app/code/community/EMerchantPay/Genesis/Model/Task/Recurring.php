@@ -184,7 +184,6 @@ class EMerchantPay_Genesis_Model_Task_Recurring
                     Mage::log($msgProfileSuspended, null, $logFileName);
                 }
             }
-
         }
 
         if ($chargedProfiles == 0) {
@@ -256,20 +255,26 @@ class EMerchantPay_Genesis_Model_Task_Recurring
             );
         }
 
-        if (empty(\Genesis\Config::getToken())) {
-            \Genesis\Config::setToken(
-                $this->getHelper()->getGenesisPaymentTransactionToken(
-                    $initRecurringCaptureTransaction
-                )
-            );
-        }
+        $recurringToken = $this->getHelper()->getRecurringSaleToken($methodCode);
 
-        if (empty(\Genesis\Config::getToken())) {
-            Mage::throwException(
-                $this->getHelper()->__(
-                    "Could not extract Terminal Token from Init Recurring Transaction"
-                )
-            );
+        if (!empty($recurringToken)) {
+            \Genesis\Config::setToken($recurringToken);
+        } else {
+            if (empty(\Genesis\Config::getToken())) {
+                \Genesis\Config::setToken(
+                    $this->getHelper()->getGenesisPaymentTransactionToken(
+                        $initRecurringCaptureTransaction
+                    )
+                );
+            }
+
+            if (empty(\Genesis\Config::getToken())) {
+                Mage::throwException(
+                    $this->getHelper()->__(
+                        "Could not extract Terminal Token from Init Recurring Transaction"
+                    )
+                );
+            }
         }
 
         $genesis = new \Genesis\Genesis("Financial\\Cards\\Recurring\\RecurringSale");

@@ -159,7 +159,7 @@ GNU General Public License for more details.
                             </depends>
                         </recurring_enabled>
                         <recurring_transaction_type translate="label">
-                            <label>Init Recurring Transaction Types</label>
+                            <label>Init Recurring Transaction Type</label>
                             <comment>
                                 <![CDATA[
                                     Select the transaction type that must be attempted during the Customers's Init Recurring Transaction session.
@@ -178,6 +178,27 @@ GNU General Public License for more details.
                                 <recurring_enabled>1</recurring_enabled>
                             </depends>
                         </recurring_transaction_type>
+                        <recurring_token translate="label">
+                            <label>Recurring Token</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Token, used for processing Recurring Transactions to the Genesis Gateway.
+                                    This Token must be a Gateway Terminal, which does not require CVV.
+                                    If empty, the default Token will be used.
+                                ]]>
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>validate-alphanum</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_token>
                         <recurring_initial_fee>
                             <label>Initial Fee</label>
                             <comment><![CDATA[
@@ -186,11 +207,11 @@ GNU General Public License for more details.
                                 ]]>
                             </comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>10</sort_order>
+                            <sort_order>11</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <validate>required-entry validate-zero-or-greater</validate>
+                            <validate>required-entry validate-greater-than-zero</validate>
                             <can_be_empty>0</can_be_empty>
                             <depends>
                                 <active>1</active>
@@ -207,7 +228,7 @@ GNU General Public License for more details.
                                 ]]>
                             </comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>12</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -227,7 +248,7 @@ GNU General Public License for more details.
                                 ]]>
                             </comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>12</sort_order>
+                            <sort_order>13</sort_order>
                             <show_in_default>1</show_in_default>
                             <can_be_empty>1</can_be_empty>
                             <depends>
@@ -244,7 +265,7 @@ GNU General Public License for more details.
                             </comment>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_order_status_new</source_model>
-                            <sort_order>13</sort_order>
+                            <sort_order>14</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -257,7 +278,7 @@ GNU General Public License for more details.
                         <allowspecific translate="label">
                             <label>Payment from Applicable Countries</label>
                             <frontend_type>allowspecific</frontend_type>
-                            <sort_order>14</sort_order>
+                            <sort_order>15</sort_order>
                             <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -271,7 +292,7 @@ GNU General Public License for more details.
                         <specificcountry translate="label">
                             <label>Payment from Specific Countries</label>
                             <frontend_type>multiselect</frontend_type>
-                            <sort_order>15</sort_order>
+                            <sort_order>16</sort_order>
                             <source_model>adminhtml/system_config_source_country</source_model>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -287,7 +308,7 @@ GNU General Public License for more details.
                             <label>Credit Card Types</label>
                             <frontend_type>multiselect</frontend_type>
                             <source_model>adminhtml/system_config_source_payment_cctype</source_model>
-                            <sort_order>16</sort_order>
+                            <sort_order>17</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -300,7 +321,7 @@ GNU General Public License for more details.
                         <min_order_total translate="label">
                             <label>Minimum Order Total</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>17</sort_order>
+                            <sort_order>18</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -313,7 +334,7 @@ GNU General Public License for more details.
                         <max_order_total translate="label">
                             <label>Maximum Order Total</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>18</sort_order>
+                            <sort_order>19</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -326,7 +347,7 @@ GNU General Public License for more details.
                         <sort_order translate="label">
                             <label>Sort Order</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>19</sort_order>
+                            <sort_order>20</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -480,6 +501,27 @@ GNU General Public License for more details.
                                 <recurring_enabled>1</recurring_enabled>
                             </depends>
                         </recurring_transaction_types>
+                        <recurring_token translate="label">
+                            <label>Recurring Token</label>
+                            <comment>
+                                <![CDATA[
+                                    Enter your Token, used for processing Recurring Transactions to the Genesis Gateway.
+                                    This Token must be a Gateway Terminal, which does not require CVV.
+                                    If empty, the default Token will be used.
+                                ]]>
+                            </comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>9</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <validate>validate-alphanum</validate>
+                            <can_be_empty>1</can_be_empty>
+                            <depends>
+                                <active>1</active>
+                                <recurring_enabled>1</recurring_enabled>
+                            </depends>
+                        </recurring_token>
                         <recurring_initial_fee>
                             <label>Initial Fee</label>
                             <comment><![CDATA[
@@ -488,11 +530,11 @@ GNU General Public License for more details.
                                 ]]>
                             </comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>09</sort_order>
+                            <sort_order>10</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
-                            <validate>required-entry validate-zero-or-greater</validate>
+                            <validate>required-entry validate-greater-than-zero</validate>
                             <can_be_empty>0</can_be_empty>
                             <depends>
                                 <active>1</active>
@@ -509,7 +551,7 @@ GNU General Public License for more details.
                                 ]]>
                             </comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>10</sort_order>
+                            <sort_order>11</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -529,7 +571,7 @@ GNU General Public License for more details.
                                 ]]>
                             </comment>
                             <frontend_type>text</frontend_type>
-                            <sort_order>11</sort_order>
+                            <sort_order>12</sort_order>
                             <show_in_default>1</show_in_default>
                             <can_be_empty>1</can_be_empty>
                             <depends>
@@ -546,7 +588,7 @@ GNU General Public License for more details.
                             </comment>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_order_status_new</source_model>
-                            <sort_order>12</sort_order>
+                            <sort_order>13</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -559,7 +601,7 @@ GNU General Public License for more details.
                         <allowspecific translate="label">
                             <label>Payment from Applicable Countries</label>
                             <frontend_type>allowspecific</frontend_type>
-                            <sort_order>13</sort_order>
+                            <sort_order>14</sort_order>
                             <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -573,7 +615,7 @@ GNU General Public License for more details.
                         <specificcountry translate="label">
                             <label>Payment from Specific Countries</label>
                             <frontend_type>multiselect</frontend_type>
-                            <sort_order>14</sort_order>
+                            <sort_order>15</sort_order>
                             <source_model>adminhtml/system_config_source_country</source_model>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
@@ -588,7 +630,7 @@ GNU General Public License for more details.
                         <min_order_total translate="label">
                             <label>Minimum Order Total</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>15</sort_order>
+                            <sort_order>16</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -601,7 +643,7 @@ GNU General Public License for more details.
                         <max_order_total translate="label">
                             <label>Maximum Order Total</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>16</sort_order>
+                            <sort_order>17</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
@@ -614,7 +656,7 @@ GNU General Public License for more details.
                         <sort_order translate="label">
                             <label>Sort Order</label>
                             <frontend_type>text</frontend_type>
-                            <sort_order>17</sort_order>
+                            <sort_order>18</sort_order>
                             <show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>

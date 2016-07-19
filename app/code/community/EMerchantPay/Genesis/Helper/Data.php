@@ -828,4 +828,17 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 
         return $baseNominalRowTotal;
     }
+
+    /**
+     * Returns Recurring Token per Payment Method
+     * @param string $model
+     * @return string
+     */
+    public function getRecurringSaleToken($model)
+    {
+        return $this->getConfigData(
+            $model,
+            'recurring_token'
+        );
+    }
 }

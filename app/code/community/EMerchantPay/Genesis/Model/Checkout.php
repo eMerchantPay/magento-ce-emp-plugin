@@ -114,7 +114,7 @@ class EMerchantPay_Genesis_Model_Checkout extends Mage_Payment_Model_Method_Abst
                     ->setShippingZipCode($shipping->getPostcode())
                     ->setShippingCity($shipping->getCity())
                     ->setShippingState($shipping->getRegion())
-                    ->setShippinCountry($shipping->getCountry())
+                    ->setShippingCountry($shipping->getCountry())
                     ->setLanguage($this->getHelper()->getLocale());
 
 
