@@ -35,11 +35,11 @@ class EMerchantPay_Genesis_Observer_CheckoutSubmitAllAfter
         $event = $observer->getEvent();
         $recurringProfiles = $event->getRecurringProfiles();
 
-        if (is_array($recurringProfiles) && count($recurringProfiles) > 0) {
+        if (is_array($recurringProfiles) && !empty($recurringProfiles)) {
             $checkoutSession = Mage::helper('emerchantpay')->getCheckoutSession();
             $redirectUrl = $checkoutSession->getEmerchantPayCheckoutRedirectUrl();
 
-            if (!empty($redirectUrl)) {
+            if ($redirectUrl) {
                 $checkoutSession->setRedirectUrl(
                     $redirectUrl
                 );

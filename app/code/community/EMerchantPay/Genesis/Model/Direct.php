@@ -29,7 +29,8 @@
  *
  * @category
  */
-class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc implements Mage_Payment_Model_Recurring_Profile_MethodInterface
+class EMerchantPay_Genesis_Model_Direct
+    extends Mage_Payment_Model_Method_Cc implements Mage_Payment_Model_Recurring_Profile_MethodInterface
 {
     // Variables
     protected $_code = 'emerchantpay_direct';
@@ -117,6 +118,67 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
     }
 
     /**
+     * Retrieve information from payment configuration
+     *
+     * @param string $field
+     * @param int|string|null|Mage_Core_Model_Store $storeId
+     *
+     * @return mixed
+     */
+    public function getConfigData($field, $storeId = null)
+    {
+        if (($field == 'order_status') && (!$this->getIsThreeDEnabled())) {
+            //This will force Mage_Sales_Model_Order_Payment to load the default status for State
+            //Look into: Mage_Sales_Model_Order_Payment->place()
+            return null;
+        } else {
+            return parent::getConfigData($field, $storeId);
+        }
+    }
+
+    /**
+     * Retrieves the Module Transaction Type Setting
+     *
+     * @return string
+     */
+    protected function getConfigTransactionType()
+    {
+        return $this->getConfigData('genesis_type');
+    }
+
+    /**
+     * Check whether we're doing 3D transactions,
+     * based on the module configuration
+     *
+     * @return bool
+     */
+    protected function getIsThreeDEnabled()
+    {
+        return
+            $this->getHelper()->getIsTransaction3dSecure(
+                $this->getConfigTransactionType()
+            );
+    }
+
+    /**
+     * Builds full Request Class Name by Transaction Type
+     * @param string $transactionType
+     * @return string
+     */
+    protected function getTransactionTypeRequestClassName($transactionType)
+    {
+        $requestClassName = \Genesis\Utils\Common::snakeCaseToCamelCase(
+            str_replace('3d', '3D', $transactionType)
+        );
+
+        $recurringInnerNamespace =
+            strpos($transactionType, 'recurring') !== false
+                ? "Recurring\\"
+                : '';
+        return "Financial\\Cards\\{$recurringInnerNamespace}{$requestClassName}";
+    }
+
+    /**
      * Payment action getter compatible with payment model
      *
      * @see Mage_Sales_Model_Order_Payment::place()
@@ -127,16 +189,15 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
     {
         $this->getHelper()->initLibrary();
 
-        switch ($this->getConfigData('genesis_type')) {
+        switch ($this->getConfigTransactionType()) {
             default:
             case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
             case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
                 return Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE;
-                break;
+
             case \Genesis\API\Constants\Transaction\Types::SALE:
             case \Genesis\API\Constants\Transaction\Types::SALE_3D:
                 return Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE_CAPTURE;
-                break;
         }
     }
 
@@ -150,11 +211,13 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      */
     public function authorize(Varien_Object $payment, $amount)
     {
-        if ($this->is3dEnabled()) {
-            return $this->_authorize3d($payment, $amount);
+        if ($this->getIsThreeDEnabled()) {
+            Mage::log('Authorize 3D-Secure transaction for order #' . $payment->getOrder()->getIncrementId());
         } else {
-            return $this->_authorize($payment, $amount);
+            Mage::log('Authorize transaction for order #' . $payment->getOrder()->getIncrementId());
         }
+
+        return $this->processTransaction($payment, $amount);
     }
 
     /**
@@ -170,71 +233,161 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
         $authorize = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH);
 
         if ($authorize) {
-            return $this->_capture($payment, $amount);
+            return $this->doCapture($payment, $amount);
         } else {
-            if ($this->is3dEnabled()) {
-                return $this->_sale3d($payment, $amount);
+            if ($this->getIsThreeDEnabled()) {
+                Mage::log('Sale 3D-Secure transaction for order #' . $payment->getOrder()->getIncrementId());
             } else {
-                return $this->_sale($payment, $amount);
+                Mage::log('Sale transaction for order #' . $payment->getOrder()->getIncrementId());
             }
+
+            return $this->processTransaction($payment, $amount);
         }
     }
 
     /**
-     * Genesis Authorize Payment Method
+     * Sends a transaction to the Gateway
+     *    - Authorize
+     *    - Authorize (3D Secure)
+     *    - Sale
+     *    - Sale (3D Secure)
      *
      * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
-     * @param String $amount
+     * @param float $amount
      *
      * @return EMerchantPay_Genesis_Model_Direct
      */
-    private function _authorize($payment, $amount)
+    protected function processTransaction(Varien_Object $payment, $amount)
     {
-        Mage::log('Authorize transaction for order #' . $payment->getOrder()->getIncrementId());
-
         try {
             $this->getHelper()->initClient($this->getCode());
+
+            $transactionType = $this->getConfigTransactionType();
+
+            $isThreeDEnabled = $this->getIsThreeDEnabled();
 
             /** @var Mage_Sales_Model_Order $order */
             $order = $payment->getOrder();
 
-            $billing  = $order->getBillingAddress();
+            $billing = $order->getBillingAddress();
             $shipping = $order->getShippingAddress();
 
-            $genesis = new \Genesis\Genesis('Financial\Cards\Authorize');
+            $genesis = new \Genesis\Genesis(
+                $this->getTransactionTypeRequestClassName(
+                    $transactionType
+                )
+            );
 
             $genesis
                 ->request()
-                    ->setTransactionId($this->getHelper()->genTransactionId($order->getIncrementId()))
-                    ->setRemoteIp($this->getHelper()->getRemoteAddress())
-                    ->setUsage($this->getHelper()->getItemList($order))
-                    ->setCurrency(
-                        $order->getOrderCurrencyCode()
+                ->setTransactionId(
+                    $this->getHelper()->genTransactionId(
+                        $order->getIncrementId()
                     )
-                    ->setAmount($amount)
-                    ->setCardHolder($payment->getCcOwner())
-                    ->setCardNumber($payment->getCcNumber())
-                    ->setExpirationYear($payment->getCcExpYear())
-                    ->setExpirationMonth($payment->getCcExpMonth())
-                    ->setCvv($payment->getCcCid())
-                    ->setCustomerEmail($order->getCustomerEmail())
-                    ->setCustomerPhone($billing->getTelephone())
-                    ->setBillingFirstName($billing->getData('firstname'))
-                    ->setBillingLastName($billing->getData('lastname'))
-                    ->setBillingAddress1($billing->getStreet(1))
-                    ->setBillingAddress2($billing->getStreet(2))
-                    ->setBillingZipCode($billing->getPostcode())
-                    ->setBillingCity($billing->getCity())
-                    ->setBillingState($billing->getRegion())
-                    ->setBillingCountry($billing->getCountry())
-                    ->setShippingFirstName($shipping->getData('firstname'))
-                    ->setShippingLastName($shipping->getData('lastname'))
-                    ->setShippingAddress1($shipping->getStreet(1))
-                    ->setShippingAddress2($shipping->getStreet(2))
-                    ->setShippingZipCode($shipping->getPostcode())
-                    ->setShippingCity($shipping->getCity())
-                    ->setShippingState($shipping->getRegion())
-                    ->setShippinCountry($shipping->getCountry());
+                )
+                ->setRemoteIp(
+                    $this->getHelper()->getRemoteAddress()
+                )
+                ->setUsage(
+                    $this->getHelper()->getItemList($order)
+                )
+                ->setCurrency(
+                    $order->getOrderCurrencyCode()
+                )
+                ->setAmount(
+                    $amount
+                )
+                ->setCardHolder(
+                    $payment->getCcOwner()
+                )
+                ->setCardNumber(
+                    $payment->getCcNumber()
+                )
+                ->setExpirationYear(
+                    $payment->getCcExpYear()
+                )
+                ->setExpirationMonth(
+                    $payment->getCcExpMonth()
+                )
+                ->setCvv(
+                    $payment->getCcCid()
+                )
+                ->setCustomerEmail(
+                    $order->getCustomerEmail()
+                )
+                ->setCustomerPhone(
+                    $billing->getTelephone()
+                );
+
+            //Billing Information
+            $genesis
+                ->request()
+                ->setBillingFirstName(
+                    $billing->getData('firstname')
+                )
+                ->setBillingLastName(
+                    $billing->getData('lastname')
+                )
+                ->setBillingAddress1(
+                    $billing->getStreet(1)
+                )
+                ->setBillingAddress2(
+                    $billing->getStreet(2)
+                )
+                ->setBillingZipCode(
+                    $billing->getPostcode()
+                )
+                ->setBillingCity(
+                    $billing->getCity()
+                )
+                ->setBillingState(
+                    $billing->getRegion()
+                )
+                ->setBillingCountry(
+                    $billing->getCountry()
+                );
+
+            //Shipping Information
+            $genesis
+                ->request()
+                ->setShippingFirstName(
+                    $shipping->getData('firstname')
+                )
+                ->setShippingLastName(
+                    $shipping->getData('lastname')
+                )
+                ->setShippingAddress1(
+                    $shipping->getStreet(1)
+                )
+                ->setShippingAddress2(
+                    $shipping->getStreet(2)
+                )
+                ->setShippingZipCode(
+                    $shipping->getPostcode()
+                )
+                ->setShippingCity(
+                    $shipping->getCity()
+                )
+                ->setShippingState(
+                    $shipping->getRegion()
+                )
+                ->setShippingCountry(
+                    $shipping->getCountry()
+                );
+
+            if ($isThreeDEnabled) {
+                $genesis
+                    ->request()
+                    ->setNotificationUrl(
+                        $this->getHelper()->getNotifyURL('direct')
+                    )
+                    ->setReturnSuccessUrl(
+                        $this->getHelper()->getSuccessURL('direct')
+                    )
+                    ->setReturnFailureUrl(
+                        $this->getHelper()->getFailureURL('direct')
+                    );
+            }
 
             $genesis->execute();
 
@@ -250,7 +403,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                     false
                 )
                 ->setIsTransactionPending(
-                    false
+                    $isThreeDEnabled
                 )
                 ->setTransactionAdditionalInfo(
                     array(
@@ -262,322 +415,28 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                     null
                 );
 
-            $payment->save();
-
-            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
-                throw new \Genesis\Exceptions\ErrorAPI(
-                    $this->getGenesisResponse()->message
-                );
-            }
-        } catch (Exception $exception) {
-            Mage::logException($exception);
-
-            Mage::throwException(
-                $this->getHelper()->__($exception->getMessage())
-            );
-        }
-
-        return $this;
-    }
-
-    /**
-     * Genesis Authorize Payment Method with 3D-Secure
-     *
-     * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
-     * @param String $amount
-     *
-     * @return EMerchantPay_Genesis_Model_Direct
-     */
-    private function _authorize3d($payment, $amount)
-    {
-        Mage::log('Authorize 3D-Secure transaction for order #' . $payment->getOrder()->getIncrementId());
-
-        try {
-            $this->getHelper()->initClient($this->getCode());
-
-            $order = $payment->getOrder();
-
-            $billing  = $order->getBillingAddress();
-            $shipping = $order->getShippingAddress();
-
-            $genesis = new \Genesis\Genesis('Financial\Cards\Authorize3D');
-
-            $genesis
-                ->request()
-                    ->setTransactionId($this->getHelper()->genTransactionId($order->getIncrementId()))
-                    ->setRemoteIp($this->getHelper()->getRemoteAddress())
-                    ->setUsage($this->getHelper()->getItemList($order))
-                    ->setCurrency(
-                        $order->getOrderCurrencyCode()
-                    )
-                    ->setAmount($amount)
-                    ->setCardHolder($payment->getCcOwner())
-                    ->setCardNumber($payment->getCcNumber())
-                    ->setExpirationYear($payment->getCcExpYear())
-                    ->setExpirationMonth($payment->getCcExpMonth())
-                    ->setCvv($payment->getCcCid())
-                    ->setCustomerEmail($order->getCustomerEmail())
-                    ->setCustomerPhone($billing->getTelephone())
-                    ->setBillingFirstName($billing->getData('firstname'))
-                    ->setBillingLastName($billing->getData('lastname'))
-                    ->setBillingAddress1($billing->getStreet(1))
-                    ->setBillingAddress2($billing->getStreet(2))
-                    ->setBillingZipCode($billing->getPostcode())
-                    ->setBillingCity($billing->getCity())
-                    ->setBillingState($billing->getRegion())
-                    ->setBillingCountry($billing->getCountry())
-                    ->setShippingFirstName($shipping->getData('firstname'))
-                    ->setShippingLastName($shipping->getData('lastname'))
-                    ->setShippingAddress1($shipping->getStreet(1))
-                    ->setShippingAddress2($shipping->getStreet(2))
-                    ->setShippingZipCode($shipping->getPostcode())
-                    ->setShippingCity($shipping->getCity())
-                    ->setShippingState($shipping->getRegion())
-                    ->setShippinCountry($shipping->getCountry())
-                    ->setNotificationUrl($this->getHelper()->getNotifyURL('direct'))
-                    ->setReturnSuccessUrl($this->getHelper()->getSuccessURL('direct'))
-                    ->setReturnFailureUrl($this->getHelper()->getFailureURL('direct'));
-
-            $genesis->execute();
-
-            $this->setGenesisResponse(
-                $genesis->response()->getResponseObject()
-            );
-
-            $payment
-                ->setTransactionId(
-                    $this->getGenesisResponse()->unique_id
-                )
-                ->setIsTransactionClosed(false)
-                ->setIsTransactionPending(true)
-                ->setPreparedMessage('3D-Secure: Redirecting customer to a verification page.')
-                ->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS =>
-                            $this->getHelper()->getArrayFromGatewayResponse(
-                                $this->getGenesisResponse()
-                            )
-                    ),
-                    null
-                );
-
-            $payment->save();
-
-            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
-                throw new \Genesis\Exceptions\ErrorAPI(
-                    $this->getGenesisResponse()->message
-                );
-            }
-
-            // Save the redirect url with our
-            $this->getHelper()->getCheckoutSession()->setEmerchantPayDirectRedirectUrl(
-                $this->getGenesisResponse()->redirect_url
-            );
-        } catch (Exception $exception) {
-            Mage::logException($exception);
-
-            Mage::throwException(
-                $this->getHelper()->__($exception->getMessage())
-            );
-        }
-
-        return $this;
-    }
-
-    /**
-     * Genesis Sale (Auth/Capture) Payment Method
-     *
-     * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
-     * @param String $amount
-     *
-     * @return EMerchantPay_Genesis_Model_Direct
-     */
-    private function _sale($payment, $amount)
-    {
-        Mage::log('Sale transaction for order #' . $payment->getOrder()->getIncrementId());
-
-        try {
-            $this->getHelper()->initClient($this->getCode());
-
-            $order = $payment->getOrder();
-
-            $billing  = $order->getBillingAddress();
-            $shipping = $order->getShippingAddress();
-
-            $genesis = new \Genesis\Genesis('Financial\Cards\Sale');
-
-            $genesis
-                ->request()
-                    ->setTransactionId($this->getHelper()->genTransactionId($order->getIncrementId()))
-                    ->setRemoteIp($this->getHelper()->getRemoteAddress())
-                    ->setUsage($this->getHelper()->getItemList($order))
-                    ->setCurrency(
-                        $order->getOrderCurrencyCode()
-                    )
-                    ->setAmount($amount)
-                    ->setCardHolder($payment->getCcOwner())
-                    ->setCardNumber($payment->getCcNumber())
-                    ->setExpirationYear($payment->getCcExpYear())
-                    ->setExpirationMonth($payment->getCcExpMonth())
-                    ->setCvv($payment->getCcCid())
-                    ->setCustomerEmail($order->getCustomerEmail())
-                    ->setCustomerPhone($billing->getTelephone())
-                    ->setBillingFirstName($billing->getData('firstname'))
-                    ->setBillingLastName($billing->getData('lastname'))
-                    ->setBillingAddress1($billing->getStreet(1))
-                    ->setBillingAddress2($billing->getStreet(2))
-                    ->setBillingZipCode($billing->getPostcode())
-                    ->setBillingCity($billing->getCity())
-                    ->setBillingState($billing->getRegion())
-                    ->setBillingCountry($billing->getCountry())
-                    ->setShippingFirstName($shipping->getData('firstname'))
-                    ->setShippingLastName($shipping->getData('lastname'))
-                    ->setShippingAddress1($shipping->getStreet(1))
-                    ->setShippingAddress2($shipping->getStreet(2))
-                    ->setShippingZipCode($shipping->getPostcode())
-                    ->setShippingCity($shipping->getCity())
-                    ->setShippingState($shipping->getRegion())
-                    ->setShippinCountry($shipping->getCountry());
-
-            $genesis->execute();
-
-            $this->setGenesisResponse(
-                $genesis->response()->getResponseObject()
-            );
-
-            $payment
-                ->setTransactionId(
-                    $this->getGenesisResponse()->unique_id
-                )
-                ->setCurrencyCode(
-                    $this->getGenesisResponse()->currency
-                )
-                ->setIsTransactionClosed(false)
-                ->setIsTransactionPending(false)
-                ->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS =>
-                            $this->getHelper()->getArrayFromGatewayResponse(
-                                $this->getGenesisResponse()
-                            )
-                    ),
-                    null
-                );
-
-            $payment->save();
-
-            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
-                throw new \Genesis\Exceptions\ErrorAPI(
-                    $this->getGenesisResponse()->message
-                );
-            }
-        } catch (Exception $exception) {
-            Mage::logException($exception);
-
-            Mage::throwException(
-                $exception->getMessage()
-            );
-        }
-
-        return $this;
-    }
-
-    /**
-     * Genesis Sale (Auth/Capture) Payment Method with 3D-Secure
-     *
-     * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
-     * @param String $amount
-     *
-     * @return EMerchantPay_Genesis_Model_Direct
-     */
-    private function _sale3d($payment, $amount)
-    {
-        Mage::log('Sale 3D-Secure transaction for order #' . $payment->getOrder()->getIncrementId());
-
-        try {
-            $this->getHelper()->initClient($this->getCode());
-
-            $order = $payment->getOrder();
-
-            $billing  = $order->getBillingAddress();
-            $shipping = $order->getShippingAddress();
-
-            $genesis = new \Genesis\Genesis('Financial\Cards\Sale3D');
-
-            $genesis
-                ->request()
-                    ->setTransactionId($this->getHelper()->genTransactionId($order->getIncrementId()))
-                    ->setRemoteIp($this->getHelper()->getRemoteAddress())
-                    ->setUsage($this->getHelper()->getItemList($order))
-                    ->setCurrency(
-                        $order->getOrderCurrencyCode()
-                    )
-                    ->setAmount($amount)
-                    ->setCardHolder($payment->getCcOwner())
-                    ->setCardNumber($payment->getCcNumber())
-                    ->setExpirationYear($payment->getCcExpYear())
-                    ->setExpirationMonth($payment->getCcExpMonth())
-                    ->setCvv($payment->getCcCid())
-                    ->setCustomerEmail($order->getCustomerEmail())
-                    ->setCustomerPhone($billing->getTelephone())
-                    ->setBillingFirstName($billing->getData('firstname'))
-                    ->setBillingLastName($billing->getData('lastname'))
-                    ->setBillingAddress1($billing->getStreet(1))
-                    ->setBillingAddress2($billing->getStreet(2))
-                    ->setBillingZipCode($billing->getPostcode())
-                    ->setBillingCity($billing->getCity())
-                    ->setBillingState($billing->getRegion())
-                    ->setBillingCountry($billing->getCountry())
-                    ->setShippingFirstName($shipping->getData('firstname'))
-                    ->setShippingLastName($shipping->getData('lastname'))
-                    ->setShippingAddress1($shipping->getStreet(1))
-                    ->setShippingAddress2($shipping->getStreet(2))
-                    ->setShippingZipCode($shipping->getPostcode())
-                    ->setShippingCity($shipping->getCity())
-                    ->setShippingState($shipping->getRegion())
-                    ->setShippinCountry($shipping->getCountry())
-                    ->setNotificationUrl($this->getHelper()->getNotifyURL('direct'))
-                    ->setReturnSuccessUrl($this->getHelper()->getSuccessURL('direct'))
-                    ->setReturnFailureUrl($this->getHelper()->getFailureURL('direct'));
-
-            $genesis->execute();
-
-            $this->setGenesisResponse(
-                $genesis->response()->getResponseObject()
-            );
-
-            // Hold transaction creation
-            $payment
-                ->setTransactionId(
-                    $this->getGenesisResponse()->unique_id
-                )
-                ->setIsTransactionClosed(false)
-                ->setIsTransactionPending(true)
-                ->setPreparedMessage(
+            if ($isThreeDEnabled) {
+                $payment->setPreparedMessage(
                     $this->getHelper()->__('3D-Secure: Redirecting customer to a verification page.')
-                )
-                ->setTransactionAdditionalInfo(
-                    array(
-                        Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS =>
-                            $this->getHelper()->getArrayFromGatewayResponse(
-                                $this->getGenesisResponse()
-                            )
-                    ),
-                    null
                 );
+            }
 
             $payment->save();
 
-            if ($this->getGenesisResponse()->status == \Genesis\API\Constants\Transaction\States::DECLINED) {
+            $gatewayStatus = new \Genesis\API\Constants\Transaction\States(
+                $this->getGenesisResponse()->status
+            );
+
+            if ($gatewayStatus->isPendingAsync()) {
+                // Save the redirect url with our
+                $this->getHelper()->getCheckoutSession()->setEmerchantPayDirectRedirectUrl(
+                    $this->getGenesisResponse()->redirect_url
+                );
+            } elseif (!$gatewayStatus->isApproved()) {
                 throw new \Genesis\Exceptions\ErrorAPI(
                     $this->getGenesisResponse()->message
                 );
             }
-
-            // Save the redirect url with our
-            $this->getHelper()->getCheckoutSession()->setEmerchantPayDirectRedirectUrl(
-                $this->getGenesisResponse()->redirect_url
-            );
         } catch (Exception $exception) {
             Mage::logException($exception);
 
@@ -599,7 +458,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      *
      * @throws Mage_Core_Exception
      */
-    private function _capture($payment, $amount)
+    protected function doCapture($payment, $amount)
     {
         Mage::log('Capture transaction for order #' . $payment->getOrder()->getIncrementId());
 
@@ -608,7 +467,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
             $authorize = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH);
 
-            $reference_id = $authorize->getTxnId();
+            $referenceId = $authorize->getTxnId();
 
             $genesis = new \Genesis\Genesis('Financial\Capture');
 
@@ -623,7 +482,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                         $this->getHelper()->getRemoteAddress()
                     )
                     ->setReferenceId(
-                        $reference_id
+                        $referenceId
                     )
                     ->setCurrency(
                         $payment->getOrder()->getOrderCurrencyCode()
@@ -638,10 +497,12 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
             $payment
                 ->setTransactionId(
+                    // @codingStandardsIgnoreStart
                     $responseObject->unique_id
+                    // @codingStandardsIgnoreEnd
                 )
                 ->setParentTransactionId(
-                    $reference_id
+                    $referenceId
                 )
                 ->setIsTransactionClosed(
                     false
@@ -701,7 +562,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
             $capture = $payment->lookupTransaction(null, Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE);
 
-            $reference_id = $capture->getTxnId();
+            $referenceId = $capture->getTxnId();
 
             $genesis = new \Genesis\Genesis('Financial\Refund');
 
@@ -716,7 +577,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                         $this->getHelper()->getRemoteAddress()
                     )
                     ->setReferenceId(
-                        $reference_id
+                        $referenceId
                     )
                     ->setCurrency(
                         $payment->getOrder()->getOrderCurrencyCode()
@@ -729,10 +590,12 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
             $payment
                 ->setTransactionId(
+                    // @codingStandardsIgnoreStart
                     $responseObject->unique_id
+                    // @codingStandardsIgnoreEnd
                 )
                 ->setParentTransactionId(
-                    $reference_id
+                    $referenceId
                 )
                 ->setShouldCloseParentTransaction(
                     true
@@ -800,12 +663,15 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
         try {
             $this->getHelper()->initClient($this->getCode());
 
-            $transactions = $this->getHelper()->getTransactionFromPaymentObject($payment, array(
-                Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
-                Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
-            ));
+            $transactions = $this->getHelper()->getTransactionFromPaymentObject(
+                $payment,
+                array(
+                    Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+                    Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
+                )
+            );
 
-            $reference_id = $transactions ? reset($transactions)->getTxnId() : null;
+            $referenceId = $transactions ? reset($transactions)->getTxnId() : null;
 
             $genesis = new \Genesis\Genesis('Financial\Void');
 
@@ -818,7 +684,7 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                         $this->getHelper()->getRemoteAddress()
                     )
                     ->setReferenceId(
-                        $reference_id
+                        $referenceId
                     );
 
             $genesis->execute();
@@ -827,10 +693,12 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
             $payment
                 ->setTransactionId(
+                    // @codingStandardsIgnoreStart
                     $responseObject->unique_id
+                    // @codingStandardsIgnoreEnd
                 )
                 ->setParentTransactionId(
-                    $reference_id
+                    $referenceId
                 )
                 ->setShouldCloseParentTransaction(
                     true
@@ -919,17 +787,17 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      *
      * @see EMerchantPay_Genesis_DirectController::notifyAction
      *
-     * @param $unique_id
+     * @param $uniqueId
      * @return mixed
      */
-    public function reconcile($unique_id)
+    public function reconcile($uniqueId)
     {
         try {
             $this->getHelper()->initClient($this->getCode());
 
             $genesis = new \Genesis\Genesis('NonFinancial\Reconcile\Transaction');
 
-            $genesis->request()->setUniqueId($unique_id);
+            $genesis->request()->setUniqueId($uniqueId);
 
             $genesis->execute();
 
@@ -949,16 +817,20 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      * Handle an incoming Genesis notification
      *
      * @param stdClass $reconcile
-     * @return bool
+     * @return $this
      */
+    // @codingStandardsIgnoreStart
     public function processNotification($reconcile)
     {
+        // @codingStandardsIgnoreEnd
         try {
             $this->getHelper()->initClient($this->getCode());
 
             /** @var Mage_Sales_Model_Order_Payment_Transaction $transaction */
             $transaction = Mage::getModel('sales/order_payment_transaction')->load(
+                // @codingStandardsIgnoreStart
                 $reconcile->unique_id,
+                // @codingStandardsIgnoreEnd
                 'txn_id'
             );
 
@@ -987,7 +859,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
                 $transaction->save();
 
+                // @codingStandardsIgnoreStart
                 switch ($reconcile->transaction_type) {
+                    // @codingStandardsIgnoreEnd
                     case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
                     case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
                         $payment->registerAuthorizationNotification($reconcile->amount);
@@ -997,15 +871,25 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                     case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE:
                     case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D:
                         $payment->setShouldCloseParentTransaction(true);
+                        $payment->setTransactionId(
+                            // @codingStandardsIgnoreStart
+                            $reconcile->unique_id
+                            // @codingStandardsIgnoreEnd
+                        );
+
                         $payment->registerCaptureNotification($reconcile->amount);
                         break;
                     default:
                         break;
                 }
 
+                // @codingStandardsIgnoreStart
                 if ($this->getHelper()->getIsTransactionTypeInitRecurring($reconcile->transaction_type)) {
+                    // @codingStandardsIgnoreEnd
                     $recurringProfile = Mage::getModel('sales/recurring_profile')->load(
+                        // @codingStandardsIgnoreStart
                         $reconcile->unique_id,
+                        // @codingStandardsIgnoreEnd
                         'reference_id'
                     );
 
@@ -1048,25 +932,11 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      */
     public function getOrderPlaceRedirectUrl()
     {
-        if ($this->is3dEnabled()) {
+        if ($this->getIsThreeDEnabled()) {
             return $this->getHelper()->getRedirectUrl('direct');
         }
 
         return false;
-    }
-
-    /**
-     * Check whether we're doing 3D transactions,
-     * based on the module configuration
-     *
-     * @return bool
-     */
-    private function is3dEnabled()
-    {
-        return
-            $this->getHelper()->getIsTransaction3dSecure(
-                $this->getConfigData('genesis_type')
-            );
     }
 
     /**
@@ -1076,9 +946,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      *
      * @return EMerchantPay_Genesis_Helper_Data|mixed
      */
-    private function getHelper($helper = '')
+    protected function getHelper($helper = '')
     {
-        if (empty($helper)) {
+        if (!$helper) {
             return Mage::helper('emerchantpay');
         } else {
             return Mage::helper($helper);
@@ -1109,11 +979,14 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
      * @param Mage_Payment_Model_Recurring_Profile $profile
      * @param Mage_Payment_Model_Info $payment
      * @return $this
+     * @throws Mage_Core_Exception
      */
+    // @codingStandardsIgnoreStart
     public function submitRecurringProfile(
         Mage_Payment_Model_Recurring_Profile $profile,
         Mage_Payment_Model_Info $payment
     ) {
+        // @codingStandardsIgnoreEnd
         $logFileName = $this->getConfigData('cron_recurring_log_file');
         $isLogEnabled = !empty($logFileName);
 
@@ -1124,11 +997,12 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
         $this->getHelper()->initClient($this->getCode());
 
         $transactionType = $this->getConfigData('recurring_transaction_type');
-        $transactionClassName = $this->getHelper()->getGenesisTransactionClassName(
-            $transactionType
-        );
 
-        $genesis = new \Genesis\Genesis("Financial\\Cards\\Recurring\\{$transactionClassName}");
+        $genesis = new \Genesis\Genesis(
+            $this->getTransactionTypeRequestClassName(
+                $transactionType
+            )
+        );
 
         $amount = $profile->getInitAmount() ?: 0;
 
@@ -1237,16 +1111,20 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
             $responseObject = $genesis->response()->getResponseObject();
 
+            // @codingStandardsIgnoreStart
             if (isset($responseObject->redirect_url)) {
-                $this->getHelper()
-                    ->getCheckoutSession()
-                        ->setEmerchantPayCheckoutRedirectUrl(
-                            $responseObject->redirect_url
-                        );
+                // @codingStandardsIgnoreEnd
+                $this->getHelper()->getCheckoutSession()->setEmerchantPayCheckoutRedirectUrl(
+                    // @codingStandardsIgnoreStart
+                    $responseObject->redirect_url
+                    // @codingStandardsIgnoreEnd
+                );
             }
 
             $profile->setReferenceId(
+                // @codingStandardsIgnoreStart
                 $responseObject->unique_id
+                // @codingStandardsIgnoreEnd
             );
 
             $payment->setSkipTransactionCreation(true);
@@ -1284,7 +1162,9 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
 
                     $payment
                         ->setTransactionId(
+                            // @codingStandardsIgnoreStart
                             $responseObject->unique_id
+                            // @codingStandardsIgnoreEnd
                         );
                     $payment
                         ->setIsTransactionPending(
@@ -1347,6 +1227,8 @@ class EMerchantPay_Genesis_Model_Direct extends Mage_Payment_Model_Method_Cc imp
                 $e->getMessage()
             );
         }
+
+        return $this;
     }
 
     /**

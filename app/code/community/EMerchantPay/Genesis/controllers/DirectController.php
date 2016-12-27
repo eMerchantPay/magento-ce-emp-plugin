@@ -25,16 +25,16 @@
 class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_Action
 {
     /** @var EMerchantPay_Genesis_Helper_Data $helper */
-    private $helper;
+    protected $_helper;
 
     /** @var EMerchantPay_Genesis_Model_Direct $direct */
-    private $direct;
+    protected $_direct;
 
     protected function _construct()
     {
-        $this->helper = Mage::helper('emerchantpay');
+        $this->_helper = Mage::helper('emerchantpay');
 
-        $this->direct = Mage::getModel('emerchantpay/direct');
+        $this->_direct = Mage::getModel('emerchantpay/direct');
     }
 
     /**
@@ -55,7 +55,7 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
         }
 
         try {
-            $this->helper->initClient($this->direct->getCode());
+            $this->_helper->initClient($this->_direct->getCode());
 
             $notification = new \Genesis\API\Notification(
                 $this->getRequest()->getPost()
@@ -66,8 +66,11 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
 
                 $reconcile = $notification->getReconciliationObject();
 
+                // @codingStandardsIgnoreStart
                 if (isset($reconcile->unique_id)) {
-                    $this->direct->processNotification($reconcile);
+                    // @codingStandardsIgnoreEnd
+
+                    $this->_direct->processNotification($reconcile);
 
                     $this->getResponse()->clearHeaders();
                     $this->getResponse()->clearBody();
@@ -121,10 +124,10 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
      */
     public function failureAction()
     {
-        $this->helper->restoreQuote();
+        $this->_helper->restoreQuote();
 
-        $this->helper->getCheckoutSession()->addError(
-            $this->helper->__('We were unable to process your payment! Please check your input or try again later.')
+        $this->_helper->getCheckoutSession()->addError(
+            $this->_helper->__('We were unable to process your payment! Please check your input or try again later.')
         );
 
         $this->_redirect('checkout/cart', array('_secure' => true));

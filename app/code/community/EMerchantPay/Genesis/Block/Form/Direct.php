@@ -73,7 +73,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
     public function getCcMonths()
     {
         $months = $this->getData('cc_months');
-        if (is_null($months)) {
+        if ($months === null) {
             $months[0] =  $this->__('Month');
             $months = array_merge($months, $this->_getConfig()->getMonths());
             $this->setData('cc_months', $months);
@@ -89,7 +89,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
     public function getCcYears()
     {
         $years = $this->getData('cc_years');
-        if (is_null($years)) {
+        if ($years === null) {
             $years = $this->_getConfig()->getYears();
             $years = array(0=>$this->__('Year'))+$years;
             $this->setData('cc_years', $years);
@@ -106,7 +106,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
     {
         if ($this->getMethod()) {
             $configData = $this->getMethod()->getConfigData('useccv');
-            if (is_null($configData)) {
+            if ($configData === null) {
                 return true;
             }
             return (bool) $configData;
@@ -121,9 +121,12 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
      */
     protected function _toHtml()
     {
-        Mage::dispatchEvent('payment_form_block_to_html_before', array(
-            'block'     => $this
-        ));
+        Mage::dispatchEvent(
+            'payment_form_block_to_html_before',
+            array(
+                'block'     => $this
+            )
+        );
 
         return parent::_toHtml();
     }

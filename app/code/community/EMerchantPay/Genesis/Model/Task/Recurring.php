@@ -41,7 +41,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
     /**
      * Cron job Observer Method for Direct PM
      * @param Mage_Cron_Model_Schedule $schedule
-     * @return array
+     * @return bool|array
      */
     public function processDirect(Mage_Cron_Model_Schedule $schedule)
     {
@@ -53,10 +53,12 @@ class EMerchantPay_Genesis_Model_Task_Recurring
      *
      * @param Mage_Cron_Model_Schedule $schedule
      * @param string $methodCode
-     * @return array
+     * @return bool|array
      */
+    // @codingStandardsIgnoreStart
     protected function run(Mage_Cron_Model_Schedule $schedule, $methodCode)
     {
+        // @codingStandardsIgnoreEnd
         $result = array();
 
         $vendorName = "emerchantpay";
@@ -89,6 +91,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
         $resource = Mage::getSingleton('core/resource');
         $adapter = $resource->getConnection('read');
 
+        // @codingStandardsIgnoreStart
         $select = $adapter->select();
         $select
             ->from(
@@ -107,7 +110,9 @@ class EMerchantPay_Genesis_Model_Task_Recurring
                         WHEN "semi_month" 	THEN DATE_ADD(updated_at, INTERVAL (period_frequency * 2) WEEK)
                         WHEN "month" 		THEN DATE_ADD(updated_at, INTERVAL period_frequency MONTH)
                         WHEN "year" 		THEN DATE_ADD(updated_at, INTERVAL period_frequency YEAR)
-                    END))');
+                    END))'
+            );
+        // @codingStandardsIgnoreEnd
 
         $binds = array(
             'method_code' =>
@@ -115,74 +120,22 @@ class EMerchantPay_Genesis_Model_Task_Recurring
             'state'       =>
                 Mage_Sales_Model_Recurring_Profile::STATE_ACTIVE,
             'now'         =>
-                $this->getHelper()->formatDateTimeToMySQLDateTime(
-                    time()
-                )
+                $this->getHelper()->formatCurrentDateTimeToMySQLDateTime()
         );
 
         $chargedProfiles = 0;
 
+        // @codingStandardsIgnoreStart
         foreach ($adapter->fetchAll($select, $binds) as $profileArr) {
+            // @codingStandardsIgnoreEnd
             if (!isset($profileArr['profile_id'])) {
                 continue;
             }
 
-            $profile = Mage::getModel('sales/recurring_profile')->load(
-                $profileArr['profile_id']
-            );
+            $profileId = $profileArr['profile_id'];
 
-            $orders = $profile->getResource()->getChildOrderIds($profile);
-            $countBillingCycles = count($orders);
-
-            if ($profile->getInitAmount()) {
-                $countBillingCycles--;
-            }
-
-            $msgChargingProfile =
-                $this->getHelper()->__("Charging Recurring Profile #") .
-                $profile->getReferenceId();
-
-            $result[] = $msgChargingProfile;
-
-            if ($isLogEnabled) {
-                Mage::log($msgChargingProfile, null, $logFileName);
-            }
-
-            $mustSetUpdateDateToNextPeriod = (bool) $countBillingCycles > 0;
-            try {
-                $this->chargeRecurringProfile($methodCode, $profile, $mustSetUpdateDateToNextPeriod);
+            if ($this->doCheckRecurringProfile($result, $profileId, $methodCode, $isLogEnabled, $logFileName)) {
                 $chargedProfiles++;
-                $countBillingCycles++;
-
-                if ($this->doCheckAndSuspendRecurringProfile($profile, $countBillingCycles)) {
-                    $msgChargingProfile =
-                        $this->getHelper()->__("Billing Cycles reached. Suspending Recurring Profile #") .
-                        $profile->getReferenceId();
-
-                    $result[] = $msgChargingProfile;
-
-                    if ($isLogEnabled) {
-                        Mage::log($msgChargingProfile, null, $logFileName);
-                    }
-                }
-            } catch (\Exception $e) {
-                $profile->setState(
-                    Mage_Sales_Model_Recurring_Profile::STATE_SUSPENDED
-                );
-                $profile->save();
-
-                $msgProfileSuspended = $this->getHelper()->__(
-                    sprintf(
-                        "Recurring Profile #%s is set to suspended, because of a failed Recurring Transaction",
-                        $profile->getReferenceId()
-                    )
-                );
-
-                $result[] = $msgProfileSuspended;
-
-                if ($isLogEnabled) {
-                    Mage::log($msgProfileSuspended, null, $logFileName);
-                }
             }
         }
 
@@ -194,6 +147,78 @@ class EMerchantPay_Genesis_Model_Task_Recurring
     }
 
     /**
+     * Does a check if the Profile has to charged and sends a Charge
+     *
+     * @param array $result
+     * @param int $profileId
+     * @param string $methodCode
+     * @param bool $isLogEnabled
+     * @param string $logFileName
+     * @return bool
+     */
+    protected function doCheckRecurringProfile(&$result, $profileId, $methodCode, $isLogEnabled, $logFileName)
+    {
+        $profile = Mage::getModel('sales/recurring_profile')->load($profileId);
+
+        $orders = $profile->getResource()->getChildOrderIds($profile);
+        $countBillingCycles = count($orders);
+
+        if ($profile->getInitAmount()) {
+            $countBillingCycles--;
+        }
+
+        $msgChargingProfile =
+            $this->getHelper()->__("Charging Recurring Profile #") .
+            $profile->getReferenceId();
+
+        $result[] = $msgChargingProfile;
+
+        if ($isLogEnabled) {
+            Mage::log($msgChargingProfile, null, $logFileName);
+        }
+
+        $mustSetUpdateDateToNextPeriod = (bool) $countBillingCycles > 0;
+        try {
+            $this->chargeRecurringProfile($methodCode, $profile, $mustSetUpdateDateToNextPeriod);
+            $countBillingCycles++;
+
+            if ($this->doCheckAndSuspendRecurringProfile($profile, $countBillingCycles)) {
+                $msgChargingProfile =
+                    $this->getHelper()->__("Billing Cycles reached. Suspending Recurring Profile #") .
+                    $profile->getReferenceId();
+
+                $result[] = $msgChargingProfile;
+
+                if ($isLogEnabled) {
+                    Mage::log($msgChargingProfile, null, $logFileName);
+                }
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            $profile->setState(
+                Mage_Sales_Model_Recurring_Profile::STATE_SUSPENDED
+            );
+            $profile->save();
+
+            $msgProfileSuspended = $this->getHelper()->__(
+                sprintf(
+                    "Recurring Profile #%s is set to suspended, because of a failed Recurring Transaction",
+                    $profile->getReferenceId()
+                )
+            );
+
+            $result[] = $msgProfileSuspended;
+
+            if ($isLogEnabled) {
+                Mage::log($msgProfileSuspended, null, $logFileName);
+            }
+
+            return false;
+        }
+    }
+
+    /**
      * Check and suspend Recurring Profile if Recurring Cycles reached
      * @param Mage_Payment_Model_Recurring_Profile $profile
      * @param int $billingCycles
@@ -201,7 +226,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
      */
     protected function doCheckAndSuspendRecurringProfile(Mage_Payment_Model_Recurring_Profile $profile, $billingCycles)
     {
-        if (!empty($profile->getPeriodMaxCycles()) && $billingCycles >= $profile->getPeriodMaxCycles()) {
+        if ($profile->getPeriodMaxCycles() && ($billingCycles >= $profile->getPeriodMaxCycles())) {
             $profile->setState(
                 Mage_Sales_Model_Recurring_Profile::STATE_SUSPENDED
             );
@@ -232,7 +257,8 @@ class EMerchantPay_Genesis_Model_Task_Recurring
         $methodCode,
         Mage_Payment_Model_Recurring_Profile $profile,
         $mustSetUpdateDateToNextPeriod
-    ) {
+    )
+    {
         $logFileName = $this->getHelper()->getConfigData(
             $methodCode,
             'cron_recurring_log_file'
@@ -257,10 +283,10 @@ class EMerchantPay_Genesis_Model_Task_Recurring
 
         $recurringToken = $this->getHelper()->getRecurringSaleToken($methodCode);
 
-        if (!empty($recurringToken)) {
+        if ($recurringToken) {
             \Genesis\Config::setToken($recurringToken);
         } else {
-            if (empty(\Genesis\Config::getToken())) {
+            if (!\Genesis\Config::getToken()) {
                 \Genesis\Config::setToken(
                     $this->getHelper()->getGenesisPaymentTransactionToken(
                         $initRecurringCaptureTransaction
@@ -268,7 +294,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
                 );
             }
 
-            if (empty(\Genesis\Config::getToken())) {
+            if (!\Genesis\Config::getToken()) {
                 Mage::throwException(
                     $this->getHelper()->__(
                         "Could not extract Terminal Token from Init Recurring Transaction"
@@ -330,16 +356,18 @@ class EMerchantPay_Genesis_Model_Task_Recurring
                 : Mage_Sales_Model_Order::STATE_CANCELED
         );
 
-        $trans_id = $responseObject->unique_id;
+        // @codingStandardsIgnoreStart
+        $transactionId = $responseObject->unique_id;
 
         $responseObject->terminal_token = $this->getHelper()->getGenesisPaymentTransactionToken(
             $initRecurringCaptureTransaction
         );
+        // @codingStandardsIgnoreEnd
 
         $payment = $order->getPayment();
         $payment
             ->setTransactionId(
-                $trans_id
+                $transactionId
             )
             ->setIsTransactionClosed(
                 true
@@ -378,7 +406,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
 
         $profile->save();
 
-        $updatedAt = ($mustSetUpdateDateToNextPeriod ? null : time());
+        $updatedAt = ($mustSetUpdateDateToNextPeriod ? null : true);
 
         $this->updateRecurringProfileDateToNextPeriod(
             $methodCode,
@@ -390,11 +418,11 @@ class EMerchantPay_Genesis_Model_Task_Recurring
     /**
      * Prepares the Recurring Profile for the next recurring period
      * @param string $methodCode
-     * @param int $profile_id
+     * @param int $profileId
      * @param int|null $updatedAt
      * @return mixed
      */
-    protected function updateRecurringProfileDateToNextPeriod($methodCode, $profile_id, $updatedAt = null)
+    protected function updateRecurringProfileDateToNextPeriod($methodCode, $profileId, $updatedAt = null)
     {
         $logFileName = $this->getHelper()->getConfigData(
             $methodCode,
@@ -404,7 +432,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
         $isLogEnabled = !empty($logFileName);
 
         if ($isLogEnabled) {
-            Mage::log(__METHOD__ . '; Profile #' . $profile_id, null, $logFileName);
+            Mage::log(__METHOD__ . '; Profile #' . $profileId, null, $logFileName);
         }
 
         $_resource = Mage::getSingleton('core/resource');
@@ -424,13 +452,11 @@ class EMerchantPay_Genesis_Model_Task_Recurring
 
         $connection = $_resource->getConnection('core_write');
         $pdoStatement = $connection->prepare($sql);
-        $pdoStatement->bindValue(':pid', $profile_id);
+        $pdoStatement->bindValue(':pid', $profileId);
         if ($updatedAt) {
             $pdoStatement->bindValue(
                 ':updated_at',
-                $this->getHelper()->formatDateTimeToMySQLDateTime(
-                    $updatedAt
-                )
+                $this->getHelper()->formatCurrentDateTimeToMySQLDateTime()
             );
         }
         return $pdoStatement->execute();
@@ -444,21 +470,32 @@ class EMerchantPay_Genesis_Model_Task_Recurring
     protected function getProfileInitRecurringTransaction($profile)
     {
         foreach ($profile->getChildOrderIds() as $orderId) {
-            $order = Mage::getModel("sales/order")->load($orderId);
+            return $this->getProfileInitRecurringTrxByOrder($orderId);
+        }
 
-            if (is_object($order) && $order->getId() && is_object($order->getPayment())) {
-                $captureTransaction = $order->getPayment()->lookupTransaction(
-                    null,
-                    Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
-                );
+        return null;
+    }
 
-                $genesisTransactionType = $this->getHelper()->getGenesisPaymentTransactionType(
-                    $captureTransaction
-                );
+    /**
+     * @param int $orderId
+     * @return Mage_Sales_Model_Order_Payment_Transaction|null
+     */
+    protected function getProfileInitRecurringTrxByOrder($orderId)
+    {
+        $order = Mage::getModel("sales/order")->load($orderId);
 
-                if ($this->getHelper()->getIsTransactionTypeInitRecurring($genesisTransactionType)) {
-                    return $captureTransaction;
-                }
+        if (is_object($order) && $order->getId() && is_object($order->getPayment())) {
+            $captureTransaction = $order->getPayment()->lookupTransaction(
+                null,
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
+            );
+
+            $genesisTransactionType = $this->getHelper()->getGenesisPaymentTransactionType(
+                $captureTransaction
+            );
+
+            if ($this->getHelper()->getIsTransactionTypeInitRecurring($genesisTransactionType)) {
+                return $captureTransaction;
             }
         }
 

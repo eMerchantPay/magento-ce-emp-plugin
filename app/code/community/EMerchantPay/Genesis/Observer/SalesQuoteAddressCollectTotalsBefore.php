@@ -25,7 +25,7 @@
  */
 class EMerchantPay_Genesis_Observer_SalesQuoteAddressCollectTotalsBefore
 {
-    private $_methodCodes = array(
+    protected $_methodCodes = array(
         'emerchantpay_checkout',
         'emerchantpay_direct'
     );
@@ -33,38 +33,50 @@ class EMerchantPay_Genesis_Observer_SalesQuoteAddressCollectTotalsBefore
     /**
      * Observer Event Handler
      * @param Varien_Event_Observer $observer
+     * @return bool|EMerchantPay_Genesis_Observer_SalesQuoteAddressCollectTotalsBefore
      */
     public function handleAction($observer)
     {
         $event = $observer->getEvent();
         $quoteAddress = $event->getQuoteAddress();
 
-        if (is_object($quoteAddress) && is_object($quoteAddress->getQuote()->getPayment())) {
-            $paymentMethodCode = $quoteAddress->getQuote()->getPayment()->getMethod();
-
-            if (isset($paymentMethodCode) && in_array($paymentMethodCode, $this->getMethodCodes())) {
-
-                if ($this->getHelper()->getIsMethodAvailable($paymentMethodCode, $quoteAddress->getQuote())) {
-                    foreach ($quoteAddress->getAllNominalItems() as $item) {
-                        $product = $item->getProduct();
-
-                        if (is_object($product) && $product->getIsRecurring() && is_array($product->getRecurringProfile())) {
-                            $productRecurringProfile = $product->getRecurringProfile();
-
-                            if ($this->getMustOverrideProfileInitAmount($productRecurringProfile)) {
-                                $productRecurringProfile['init_amount'] =
-                                    $this->getHelper()->getMethodInitRecurringFee(
-                                        $paymentMethodCode
-                                    );
-                                $product->setRecurringProfile(
-                                    $productRecurringProfile
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+        if (!is_object($quoteAddress) || !is_object($quoteAddress->getQuote()->getPayment())) {
+            return false;
         }
+
+        $paymentMethodCode = $quoteAddress->getQuote()->getPayment()->getMethod();
+
+        if (!isset($paymentMethodCode) || !in_array($paymentMethodCode, $this->getMethodCodes())) {
+            return false;
+        }
+
+        if (!$this->getHelper()->getIsMethodAvailable($paymentMethodCode, $quoteAddress->getQuote())) {
+            return false;
+        }
+
+        foreach ($quoteAddress->getAllNominalItems() as $item) {
+            $product = $item->getProduct();
+
+            if (!is_object($product) || !$product->getIsRecurring() || !is_array($product->getRecurringProfile())) {
+                continue;
+            }
+
+            $productRecurringProfile = $product->getRecurringProfile();
+
+            if (!$this->getMustOverrideProfileInitAmount($productRecurringProfile)) {
+                continue;
+            }
+
+            $productRecurringProfile['init_amount'] =
+                $this->getHelper()->getMethodInitRecurringFee(
+                    $paymentMethodCode
+                );
+            $product->setRecurringProfile(
+                $productRecurringProfile
+            );
+        }
+
+        return $this;
     }
 
     /**

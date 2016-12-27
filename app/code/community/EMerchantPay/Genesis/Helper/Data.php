@@ -37,7 +37,9 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     public function initLibrary()
     {
         if (!class_exists('\Genesis\Genesis', false)) {
+            // @codingStandardsIgnoreStart
             include Mage::getBaseDir('lib') . DS . 'Genesis' . DS . 'vendor' . DS . 'autoload.php';
+            // @codingStandardsIgnoreEnd
         }
     }
     
@@ -201,7 +203,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 
         if (!\Genesis\API\Constants\i18n::isValidLanguageCode($languageCode)) {
             Mage::throwException(
-                $this->__('The provided argument is not a valid ISO-639-1 language code ' .
+                $this->__(
+                    'The provided argument is not a valid ISO-639-1 language code ' .
                     'or is not supported by the Payment Gateway!'
                 )
             );
@@ -234,7 +237,9 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     public function getQuote($quoteId)
     {
         return Mage::getModel('sales/quote')->load(
-            abs(intval($quoteId))
+            abs(
+                (int) $quoteId
+            )
         );
     }
 
@@ -246,36 +251,36 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function getArrayFromGatewayResponse($response)
     {
-        $transaction_details = array();
+        $transactionDetails = array();
 
         foreach ($response as $key => $value) {
             if (is_string($value)) {
-                $transaction_details[$key] = $value;
+                $transactionDetails[$key] = $value;
             }
 
             if ($value instanceof DateTime) {
-                $transaction_details[$key] = $value->format('c');
+                $transactionDetails[$key] = $value->format('c');
             }
         }
 
-        return $transaction_details;
+        return $transactionDetails;
     }
 
     /**
      * Get DESC list of specific transactions from payment object
      *
      * @param Mage_Sales_Model_Order_Payment    $payment
-     * @param array|string                      $type_filter
+     * @param array|string                      $typeFilter
      * @return array
      */
-    public function getTransactionFromPaymentObject($payment, $type_filter)
+    public function getTransactionFromPaymentObject($payment, $typeFilter)
     {
         $transactions = array();
 
         $collection = Mage::getModel('sales/order_payment_transaction')->getCollection()
                           ->setOrderFilter($payment->getOrder())
                           ->addPaymentIdFilter($payment->getId())
-                          ->addTxnTypeFilter($type_filter)
+                          ->addTxnTypeFilter($typeFilter)
                           ->setOrder('created_at', Varien_Data_Collection::SORT_ORDER_DESC);
 
         /** @var Mage_Sales_Model_Order_Payment_Transaction $txn */
@@ -291,7 +296,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      *
      * @see API parameter "Usage" or "Description"
      *
-     * @param Mage_Sales_Model_Order_Payment $order
+     * @param Mage_Sales_Model_Order $order
      *
      * @return string Formatted List of Items
      */
@@ -493,8 +498,6 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
                 ->getResponse()
                 ->setRedirect($target)
                 ->sendHeaders();
-
-            exit(0);
         }
     }
 
@@ -564,12 +567,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      * @param bool $supportsRecurring
      * @return bool
      */
-    public function getIsMethodAvailable(
-        $method,
-        $quote,
-        $requiresSecureConnection = false,
-        $supportsRecurring = true
-    ) {
+    public function getIsMethodAvailable($method, $quote, $requiresSecureConnection = false, $supportsRecurring = true)
+    {
         return
             $this->getIsMethodActive($method) &&
             (!$requiresSecureConnection || $this->getIsSecureConnectionEnabled()) &&
@@ -617,43 +616,13 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     {
         $remoteAddress = Mage::helper('core/http')->getRemoteAddr(false);
 
-        if (empty($remoteAddress) && function_exists("parse_url") && function_exists("gethostbyname")) {
-            $parsedUrl = parse_url(
-                Mage::getBaseUrl(Mage_Core_Model_store::URL_TYPE_WEB)
-            );
+        if (!$remoteAddress && function_exists("gethostbyname")) {
+            $requestHostName = Mage::app()->getRequest()->getHttpHost();
 
-            if (isset($parsedUrl['host'])) {
-                $remoteAddress = gethostbyname(
-                    $parsedUrl['host']
-                );
-            }
+            $remoteAddress = gethostbyname($requestHostName);
         }
 
         return $remoteAddress ?: "127.0.0.1";
-    }
-
-    /**
-     * Builds a Genesis Transaction Class name by Genesis Transaction
-     * @param string $transactionType
-     * @return string
-     */
-    public function getGenesisTransactionClassName($transactionType)
-    {
-        $this->initLibrary();
-
-        $className = \Genesis\Utils\Common::snakeCaseToCamelCase($transactionType);
-
-        if ($this->getIsTransaction3dSecure($transactionType)) {
-            $className =
-                substr(
-                    $className,
-                    0,
-                    strlen($className) - strlen(self::SECURE_TRANSCTION_TYPE_SUFFIX)
-                ) .
-                self::SECURE_TRANSCTION_TYPE_SUFFIX;
-        }
-
-        return $className;
     }
 
     /**
@@ -785,17 +754,12 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
-     * Returns a formatted MySQL Datetime Value
-     * @param int $time
+     * Returns the current datetime as a formatted MySQL Datetime Value
      * @return string
      */
-    public function formatDateTimeToMySQLDateTime($time)
+    public function formatCurrentDateTimeToMySQLDateTime()
     {
-        return
-            strftime(
-                '%Y-%m-%d %H:%M:%S',
-                $time
-            );
+        return Mage::getSingleton('core/date')->gmtDate();
     }
 
     /**

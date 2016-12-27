@@ -25,9 +25,9 @@
 class EMerchantPay_Genesis_Block_Redirect_Checkout extends Mage_Core_Block_Template
 {
     /** @var String */
-    private $unique_id;
+    protected $_uniqueId;
     /** @var EMerchantPay_Genesis_Helper_Data $helper */
-    private $helper;
+    protected $_helper;
 
     protected function _construct()
     {
@@ -51,7 +51,7 @@ class EMerchantPay_Genesis_Block_Redirect_Checkout extends Mage_Core_Block_Templ
 
         $form
             ->setAction(
-                $this->helper->getCheckoutSession()->getEmerchantPayCheckoutRedirectUrl()
+                $this->_helper->getCheckoutSession()->getEmerchantPayCheckoutRedirectUrl()
             )
             ->setId('emerchantpay_redirect_notification')
             ->setName('emerchantpay_redirect_notification')
@@ -80,22 +80,22 @@ class EMerchantPay_Genesis_Block_Redirect_Checkout extends Mage_Core_Block_Templ
      */
     public function getButtonId()
     {
-        return sprintf('redirect_to_dest_%s', $this->unique_id);
+        return sprintf('redirect_to_dest_%s', $this->_uniqueId);
     }
 
     /**
      * Set Helper
      */
-    private function setHelper()
+    protected function setHelper()
     {
-        $this->helper = Mage::helper('emerchantpay');
+        $this->_helper = Mage::helper('emerchantpay');
     }
 
     /**
      * Set Unique Id
      */
-    private function setUniqueId()
+    protected function setUniqueId()
     {
-        $this->unique_id = Mage::helper('core')->uniqHash();
+        $this->_uniqueId = Mage::helper('core')->uniqHash();
     }
 }
