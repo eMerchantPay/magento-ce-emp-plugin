@@ -46,6 +46,7 @@ class EMerchantPay_Genesis_Observer_CheckoutSubmitAllAfter
                 $checkoutSession->setEmerchantPayCheckoutRedirectUrl(null);
             }
         }
+
         return $this;
     }
     

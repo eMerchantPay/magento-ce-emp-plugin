@@ -124,11 +124,13 @@ class EMerchantPay_Genesis_DirectController extends Mage_Core_Controller_Front_A
      */
     public function failureAction()
     {
-        $this->_helper->restoreQuote();
-
-        $this->_helper->getCheckoutSession()->addError(
+        $failureMessage = $this->_helper->getReconciledFailureActionMessage(
             $this->_helper->__('We were unable to process your payment! Please check your input or try again later.')
         );
+
+        $this->_helper->restoreQuote();
+
+        $this->_helper->getCheckoutSession()->addError($failureMessage);
 
         $this->_redirect('checkout/cart', array('_secure' => true));
     }

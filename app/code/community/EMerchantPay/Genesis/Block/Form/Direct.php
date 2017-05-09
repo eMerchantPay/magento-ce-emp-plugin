@@ -62,6 +62,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
                 }
             }
         }
+
         return $types;
     }
 
@@ -78,6 +79,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
             $months = array_merge($months, $this->_getConfig()->getMonths());
             $this->setData('cc_months', $months);
         }
+
         return $months;
     }
 
@@ -94,6 +96,7 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
             $years = array(0=>$this->__('Year'))+$years;
             $this->setData('cc_years', $years);
         }
+
         return $years;
     }
 
@@ -109,8 +112,10 @@ class EMerchantPay_Genesis_Block_Form_Direct extends Mage_Payment_Block_Form
             if ($configData === null) {
                 return true;
             }
+
             return (bool) $configData;
         }
+
         return true;
     }
 

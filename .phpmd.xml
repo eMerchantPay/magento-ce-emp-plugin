@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<ruleset name="Magento1-EMP"
+         xmlns="http://pmd.sf.net/ruleset/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0
+                     http://pmd.sf.net/ruleset_xml_schema.xsd"
+         xsi:noNamespaceSchemaLocation="
+                     http://pmd.sf.net/ruleset_xml_schema.xsd">
+    <description>
+        Rule Set for Magento 1.x eMerchantPay Plugin
+    </description>
+
+    <!--Start of CleanCode RuleSets-->
+    <rule ref="rulesets/cleancode.xml">
+        <exclude name="StaticAccess" />
+        <exclude name="BooleanArgumentFlag" />
+        <exclude name="ElseExpression" />
+    </rule>
+    <!--End of CleanCode RuleSets-->
+
+    <!--Start of CodeSize RuleSets-->
+    <rule ref="rulesets/codesize.xml">
+        <exclude name="TooManyPublicMethods"/>
+    </rule>
+    <!--End of CodeSize RuleSets-->
+
+    <!--Start of Controlversial RuleSets-->
+    <rule ref="rulesets/controversial.xml">
+        <exclude name="CamelCaseClassName" />
+        <exclude name="CamelCasePropertyName" />
+        <exclude name="CamelCaseMethodName" />
+        <exclude name="CamelCaseParameterName" />
+        <exclude name="CamelCaseVariableName" />
+    </rule>
+    <!--End of Controlversial RuleSets-->
+    
+    <rule ref="rulesets/design.xml"/>
+
+    <!--Start of Naming RuleSets-->
+    <rule ref="rulesets/naming.xml">
+        <exclude name="LongVariable"/>
+        <exclude name="BooleanGetMethodName"/>
+    </rule>
+
+    <rule ref="rulesets/naming.xml/LongVariable">
+        <properties>
+            <property name="maximum" value="25" />
+        </properties>
+    </rule>
+
+    <rule ref="rulesets/naming.xml/BooleanGetMethodName">
+        <properties>
+            <property name="checkParameterizedMethods" value="true" />
+        </properties>
+    </rule>
+    <!--End of Naming RuleSets-->
+
+    <rule ref="rulesets/unusedcode.xml"/>
+
+    <exclude-pattern>*/lib/*</exclude-pattern>
+</ruleset>

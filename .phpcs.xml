@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<ruleset name="Magento1-EMP">
+    <description>Generally-applicable sniffs for Magento 1.x EMP Plugin</description>
+
+    <rule ref="Ecg" />
+    <rule ref="MEQP1" />
+
+    <exclude-pattern>*/lib/*</exclude-pattern>
+</ruleset>

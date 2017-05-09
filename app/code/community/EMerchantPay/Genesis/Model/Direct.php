@@ -912,6 +912,8 @@ class EMerchantPay_Genesis_Model_Direct
                     $reconcile->status,
                     $reconcile->message
                 );
+
+                $order->queueNewOrderEmail();
             }
         } catch (Exception $exception) {
             Mage::logException($exception);

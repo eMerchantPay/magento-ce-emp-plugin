@@ -805,4 +805,102 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
             'recurring_token'
         );
     }
+
+    /**
+     * Determines the Initial Txn Type of a Method Instance
+     * @param Mage_Payment_Model_Method_Abstract $methodInstance
+     * @return string|false
+     */
+    public function getTxnTypeOfMethodInstance($methodInstance)
+    {
+        if (! $methodInstance instanceof Mage_Payment_Model_Method_Abstract) {
+            return false;
+        }
+
+        $paymentActionTxnTypes = array(
+            Mage_Payment_Model_Method_Abstract::ACTION_ORDER             =>
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_ORDER,
+            Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE         =>
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_AUTH,
+            Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE_CAPTURE =>
+                Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
+        );
+
+        $paymentAction = $methodInstance->getConfigPaymentAction();
+
+        if (array_key_exists($paymentAction, $paymentActionTxnTypes)) {
+            return $paymentActionTxnTypes[$paymentAction];
+        }
+
+        return false;
+    }
+
+    /**
+     * @param Mage_Sales_Model_Order_Payment $payment
+     * @return stdClass|false
+     */
+    public function reconcileCheckoutOrder($payment)
+    {
+        $methodInstance = $payment->getMethodInstance();
+
+        $txnType = $this->getTxnTypeOfMethodInstance($methodInstance);
+
+        if ($txnType === false) {
+            return false;
+        }
+
+        $checkoutTransaction = $payment->lookupTransaction(null, $txnType);
+
+        if ($checkoutTransaction === false) {
+            return false;
+        }
+
+        if (!method_exists($methodInstance, 'reconcile')) {
+            return false;
+        }
+
+        try {
+            return $methodInstance->reconcile(
+                $checkoutTransaction->getTxnId()
+            );
+        } catch (\Genesis\Exceptions\ErrorAPI $api) {
+            // This is reconciliation, don't throw on ErrorAPI
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieves the original Error Message from Gateway by doing Reconciliation
+     *
+     * @param string $default
+     * @return string
+     */
+    public function getReconciledFailureActionMessage($default = '')
+    {
+        $order = $this->getCheckoutSession()->getLastRealOrder();
+
+        if (!$order || !$order->getPayment()) {
+            return $default;
+        }
+
+        $responseObject = $this->reconcileCheckoutOrder($order->getPayment());
+
+        if (! $responseObject instanceof \stdClass) {
+            return $default;
+        }
+
+        $paymentTransaction =
+            isset($responseObject->payment_transaction)
+                ? $responseObject->payment_transaction
+                : $responseObject;
+
+        if (isset($paymentTransaction->message) && isset($paymentTransaction->technical_message)) {
+            return "{$paymentTransaction->message} Details: {$paymentTransaction->technical_message}";
+        } elseif (isset($paymentTransaction->message)) {
+            return $paymentTransaction->message;
+        }
+
+        return $default;
+    }
 }

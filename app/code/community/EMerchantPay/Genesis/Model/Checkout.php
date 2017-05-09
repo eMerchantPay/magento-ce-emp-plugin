@@ -137,6 +137,7 @@ class EMerchantPay_Genesis_Model_Checkout
                             $parameters['product_name'] = $orderItemsList;
                             $parameters['product_category'] = $orderItemsList;
                         }
+
                         $genesis
                             ->request()
                                 ->addTransactionType($transactionType, $parameters);
@@ -757,6 +758,8 @@ class EMerchantPay_Genesis_Model_Checkout
                 $paymentTransaction->status
             );
 
+            $order->queueNewOrderEmail();
+
             return true;
         } catch (Exception $exception) {
             Mage::logException($exception);
@@ -928,8 +931,7 @@ class EMerchantPay_Genesis_Model_Checkout
     public function submitRecurringProfile(
         Mage_Payment_Model_Recurring_Profile $profile,
         Mage_Payment_Model_Info $payment
-    )
-    {
+    ) {
         $logFileName = $this->getConfigData('cron_recurring_log_file');
         $isLogEnabled = !empty($logFileName);
 
@@ -1126,7 +1128,6 @@ class EMerchantPay_Genesis_Model_Checkout
             $profile->setState(
                 Mage_Sales_Model_Recurring_Profile::STATE_PENDING
             );
-
         } catch (Exception $e) {
             Mage::throwException(
                 $e->getMessage()

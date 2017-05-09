@@ -257,8 +257,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
         $methodCode,
         Mage_Payment_Model_Recurring_Profile $profile,
         $mustSetUpdateDateToNextPeriod
-    )
-    {
+    ) {
         $logFileName = $this->getHelper()->getConfigData(
             $methodCode,
             'cron_recurring_log_file'
@@ -402,6 +401,8 @@ class EMerchantPay_Genesis_Model_Task_Recurring
             $profile->setState(
                 Mage_Sales_Model_Recurring_Profile::STATE_SUSPENDED
             );
+        } else {
+            $order->queueNewOrderEmail();
         }
 
         $profile->save();
@@ -459,6 +460,7 @@ class EMerchantPay_Genesis_Model_Task_Recurring
                 $this->getHelper()->formatCurrentDateTimeToMySQLDateTime()
             );
         }
+
         return $pdoStatement->execute();
     }
 
