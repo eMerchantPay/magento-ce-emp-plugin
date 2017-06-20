@@ -65,45 +65,67 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
     protected function getTransactionTypes()
     {
         return array(
-            \Genesis\API\Constants\Transaction\Types::ABNIDEAL =>
+            \Genesis\API\Constants\Transaction\Types::ABNIDEAL            =>
                 Mage::helper('emerchantpay')->__('ABN iDEAL'),
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE =>
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE           =>
                 Mage::helper('emerchantpay')->__('Authorize'),
-            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D =>
+            \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D        =>
                 Mage::helper('emerchantpay')->__('Authorize (3D-Secure)'),
-            \Genesis\API\Constants\Transaction\Types::CASHU =>
+            \Genesis\API\Constants\Transaction\Types::CASHU               =>
                 Mage::helper('emerchantpay')->__('CashU'),
-            \Genesis\API\Constants\Payment\Methods::EPS =>
+            \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN       =>
+                Mage::helper('emerchantpay')->__('Citadel'),
+            \Genesis\API\Constants\Payment\Methods::EPS                   =>
                 Mage::helper('emerchantpay')->__('eps'),
-            \Genesis\API\Constants\Payment\Methods::GIRO_PAY =>
+            \Genesis\API\Constants\Transaction\Types::EZEEWALLET          =>
+                Mage::helper('emerchantpay')->__('eZeeWallet'),
+            \Genesis\API\Constants\Payment\Methods::GIRO_PAY              =>
                 Mage::helper('emerchantpay')->__('GiroPay'),
-            \Genesis\API\Constants\Transaction\Types::NETELLER =>
+            \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN        =>
+                Mage::helper('emerchantpay')->__('iDebit'),
+            \Genesis\API\Constants\Transaction\Types::INPAY               =>
+                Mage::helper('emerchantpay')->__('INPay'),
+            \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN   =>
+                Mage::helper('emerchantpay')->__('InstaDebit'),
+            \Genesis\API\Constants\Payment\Methods::BCMC                  =>
+                Mage::helper('emerchantpay')->__('Mr.Cash'),
+            \Genesis\API\Constants\Payment\Methods::MYBANK                =>
+                Mage::helper('emerchantpay')->__('MyBank'),
+            \Genesis\API\Constants\Transaction\Types::NETELLER            =>
                 Mage::helper('emerchantpay')->__('Neteller'),
-            \Genesis\API\Constants\Payment\Methods::QIWI =>
-                Mage::helper('emerchantpay')->__('Qiwi'),
-            \Genesis\API\Constants\Transaction\Types::PAYSAFECARD =>
+            \Genesis\API\Constants\Transaction\Types::P24                 =>
+                Mage::helper('emerchantpay')->__('P24'),
+            \Genesis\API\Constants\Transaction\Types::PAYSAFECARD         =>
                 Mage::helper('emerchantpay')->__('PaySafeCard'),
-            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE =>
+            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE   =>
                 Mage::helper('emerchantpay')->__('PayByVoucher (Sale)'),
             \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY =>
                 Mage::helper('emerchantpay')->__('PayByVoucher (oBeP)'),
-            \Genesis\API\Constants\Payment\Methods::PRZELEWY24 =>
-                Mage::helper('emerchantpay')->__('Przelewy24'),
-            \Genesis\API\Constants\Transaction\Types::POLI =>
+            \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS      =>
+                Mage::helper('emerchantpay')->__('PayPal Express'),
+            \Genesis\API\Constants\Transaction\Types::POLI                =>
                 Mage::helper('emerchantpay')->__('POLi'),
-            \Genesis\API\Constants\Payment\Methods::SAFETY_PAY =>
+            \Genesis\API\Constants\Payment\Methods::PRZELEWY24            =>
+                Mage::helper('emerchantpay')->__('Przelewy24'),
+            \Genesis\API\Constants\Payment\Methods::QIWI                  =>
+                Mage::helper('emerchantpay')->__('Qiwi'),
+            \Genesis\API\Constants\Payment\Methods::SAFETY_PAY            =>
                 Mage::helper('emerchantpay')->__('SafetyPay'),
-            \Genesis\API\Constants\Transaction\Types::SALE =>
+            \Genesis\API\Constants\Transaction\Types::SALE                =>
                 Mage::helper('emerchantpay')->__('Sale'),
-            \Genesis\API\Constants\Transaction\Types::SALE_3D =>
+            \Genesis\API\Constants\Transaction\Types::SALE_3D             =>
                 Mage::helper('emerchantpay')->__('Sale (3D-Secure)'),
-            \Genesis\API\Constants\Transaction\Types::SOFORT =>
+            \Genesis\API\Constants\Transaction\Types::SDD_SALE            =>
+                Mage::helper('emerchantpay')->__('Sepa Direct Debit'),
+            \Genesis\API\Constants\Transaction\Types::SOFORT              =>
                 Mage::helper('emerchantpay')->__('SOFORT'),
-            \Genesis\API\Constants\Payment\Methods::TELEINGRESO =>
+            \Genesis\API\Constants\Payment\Methods::TELEINGRESO           =>
                 Mage::helper('emerchantpay')->__('TeleIngreso'),
-            \Genesis\API\Constants\Payment\Methods::TRUST_PAY =>
+            \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE        =>
+                Mage::helper('emerchantpay')->__('Trustly'),
+            \Genesis\API\Constants\Payment\Methods::TRUST_PAY             =>
                 Mage::helper('emerchantpay')->__('TrustPay'),
-            \Genesis\API\Constants\Transaction\Types::WEBMONEY =>
+            \Genesis\API\Constants\Transaction\Types::WEBMONEY            =>
                 Mage::helper('emerchantpay')->__('WebMoney'),
         );
     }

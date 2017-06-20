@@ -27,6 +27,8 @@ namespace Genesis\API;
  *
  * @package    Genesis
  * @subpackage API
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Response
 {
@@ -92,6 +94,9 @@ class Response
             );
         }
 
+        // Apply per-field transformations
+        $this->transform([$this->responseObj]);
+
         if (isset($this->responseObj->status)) {
             $state = new Constants\Transaction\States($this->responseObj->status);
 
@@ -109,9 +114,6 @@ class Response
                 );
             }
         }
-
-        // Apply per-field transformations
-        $this->transform(array($this->responseObj));
     }
 
     /**
@@ -129,17 +131,10 @@ class Response
         );
 
         if ($status->isValid()) {
-            if ($status->isError()) {
-                $result = false;
-            } else {
-                $result = true;
-            }
-        } else {
-            // return null if status is inapplicable
-            $result = null;
+            return !$status->isError();
         }
 
-        return $result;
+        return null;
     }
 
     /**
@@ -166,11 +161,11 @@ class Response
      */
     public function suppressReconciliationException()
     {
-        $instances = array(
+        $instances = [
             new \Genesis\API\Request\NonFinancial\Reconcile\DateRange(),
             new \Genesis\API\Request\NonFinancial\Reconcile\Transaction(),
             new \Genesis\API\Request\WPF\Reconcile()
-        );
+        ];
 
         if (isset($this->requestCtx) && isset($this->responseObj->unique_id)) {
             foreach ($instances as $instance) {
@@ -258,14 +253,14 @@ class Response
      */
     public static function transformObject(&$entry)
     {
-        $filters = array(
+        $filters = [
             'transformFilterAmount',
             'transformFilterTimestamp'
-        );
+        ];
 
         foreach ($filters as $filter) {
             if (method_exists(__CLASS__, $filter)) {
-                $result = call_user_func(array(__CLASS__, $filter), $entry);
+                $result = call_user_func([__CLASS__, $filter], $entry);
 
                 if ($result) {
                     $entry = $result;

@@ -95,7 +95,7 @@ final class Common
     {
         $snakeCase = explode('_', self::pascalToSnakeCase($input));
 
-        $result = array(
+        $result = [
             current(
                 array_slice($snakeCase, 0, 1)
             ),
@@ -103,7 +103,7 @@ final class Common
                 '_',
                 array_slice($snakeCase, 1)
             )
-        );
+        ];
 
         return $result;
     }
@@ -180,6 +180,96 @@ final class Common
     }
 
     /**
+     * Check if the passed key exists in the supplied array
+     *
+     * @param string $key
+     * @param array $arr
+     *
+     * @return bool
+     */
+    public static function isArrayKeyExists($key, $arr)
+    {
+        if (!self::isValidArray($arr)) {
+            return false;
+        }
+
+        return array_key_exists($key, $arr);
+    }
+
+    /**
+     * Makes a copy of an array
+     *
+     * @param array $arr
+     * @return array|null
+     */
+    public static function copyArray($arr)
+    {
+        if (!self::isValidArray($arr)) {
+            return null;
+        }
+
+        return array_merge([], $arr);
+    }
+
+    /**
+     * Sorts an array by value and returns a new instance
+     *
+     * @param array $arr
+     * @return array
+     */
+    public static function getSortedArrayByValue($arr)
+    {
+        $duplicate = self::copyArray($arr);
+
+        if ($duplicate === null) {
+            return null;
+        }
+
+        asort($duplicate);
+
+        return $duplicate;
+    }
+
+    /**
+     * Appends items to an ArrayObject by key
+     *
+     * @param \ArrayObject $arrObj
+     * @param string $key
+     * @param array $values
+     * @return \ArrayObject|null
+     */
+    public static function appendItemsToArrayObj(&$arrObj, $key, $values)
+    {
+        if (! $arrObj instanceof \ArrayObject) {
+            return null;
+        }
+
+        $arr = $arrObj->getArrayCopy();
+
+        $commonArrKeyValues =
+            Common::isArrayKeyExists($key, $arr)
+                ? $arr[$key]
+                : [];
+
+        $arr[$key] = array_merge($commonArrKeyValues, $values);
+
+        return $arrObj = self::createArrayObject($arr);
+    }
+
+    /**
+     * @param array $arr
+     * @return array
+     */
+    public static function getArrayKeys($arr)
+    {
+        if (self::isValidArray($arr)) {
+            return array_keys($arr);
+        }
+
+        return [];
+    }
+
+    /**
      * Check if the passed argument is a valid XML tag name
      *
      * @param string $tag
@@ -211,9 +301,9 @@ final class Common
             return true;
         } elseif (is_null($flag)) {
             return $string;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -228,9 +318,9 @@ final class Common
         if (is_bool($bool)) {
             if ($bool) {
                 return 'true';
-            } else {
-                return 'false';
             }
+
+            return 'false';
         }
 
         return $bool;
@@ -269,5 +359,48 @@ final class Common
         }
 
         return false;
+    }
+
+    /**
+     * Determines if the given class is Instantiable or not
+     * Helps to prevent from creating an instance of an abstract class
+     *
+     * @param string $className
+     * @return bool
+     */
+    public static function isClassAbstract($className)
+    {
+        if (!class_exists($className)) {
+            return false;
+        }
+
+        $reflectionClass = new \ReflectionClass($className);
+
+        return $reflectionClass->isAbstract();
+    }
+
+    /**
+     * Retrieves all constants in a class in a list
+     * @param string $className
+     * @return array
+     */
+    public static function getClassConstants($className)
+    {
+        if (!class_exists($className)) {
+            return [];
+        }
+
+        $reflection = new \ReflectionClass($className);
+
+        return $reflection->getConstants();
+    }
+
+    /**
+     * @param string $pattern
+     * @return bool
+     */
+    public static function isRegexExpr($pattern)
+    {
+        return @preg_match($pattern, null) !== false;
     }
 }

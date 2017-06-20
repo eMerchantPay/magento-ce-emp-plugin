@@ -29,64 +29,61 @@ namespace Genesis;
  *
  * @package Genesis
  *
- * @method static \Genesis\Config getUsername()  Get the Username, set in configuration
- * @method static \Genesis\Config getPassword()  Get the Password, set in the configuration
- * @method static \Genesis\Config getToken()     Get the Terminal Token, set in configuration
+ * @method static string getUsername()  Get the Username, set in configuration
+ * @method static string getPassword()  Get the Password, set in the configuration
+ * @method static string getToken()     Get the Terminal Token, set in configuration
  *
- * @method static \Genesis\Config setUsername()  Set the Username
- * @method static \Genesis\Config setPassword()  Set the Password
- * @method static \Genesis\Config setToken()     Set the Terminal
+ * @method static \Genesis\Config setUsername($value)  Set the Username
+ * @method static \Genesis\Config setPassword($value)  Set the Password
+ * @method static \Genesis\Config setToken($value)     Set the Terminal
  */
 final class Config
 {
     /**
      * Library Version
      */
-    const VERSION = '1.4.2';
+    const VERSION = '1.7.0';
 
     /**
      * Core configuration settings
      *
-     * @var Array
+     * @var array
      */
-    public static $vault
-        = array(
-            'endpoint'      => null,
-            'username'      => null,
-            'password'      => null,
-            'token'         => null,
-            'environment'   => \Genesis\API\Constants\Environments::STAGING,
-        );
+    public static $vault = [
+        'endpoint'    => null,
+        'username'    => null,
+        'password'    => null,
+        'token'       => null,
+        'environment' => \Genesis\API\Constants\Environments::STAGING
+    ];
 
     /**
      * Interface settings
      *
      * @var array
      */
-    public static $interfaces
-        = array(
-            'builder' => 'xml',
-            'network' => 'curl',
-        );
+    public static $interfaces = [
+        'builder' => 'xml',
+        'network' => 'curl'
+    ];
 
     /**
      * Some requests are targeting different sub-domains.
      * This should map all available requests/sub-domains
      * for each configuration type (develop,sandbox,production)
      *
-     * @var Array
+     * @var array
      */
-    public static $domains
-        = array(
-            'gateway' => array(
-                'production' => 'gate.',
-                'sandbox'    => 'staging.gate.'
-            ),
-            'wpf'     => array(
-                'production' => 'wpf.',
-                'sandbox'    => 'staging.wpf.',
-            ),
-        );
+    public static $domains = [
+        'gateway' => [
+            'production' => 'gate.',
+            'sandbox'    => 'staging.gate.'
+        ],
+        'wpf'     => [
+            'production' => 'wpf.',
+            'sandbox'    => 'staging.wpf.'
+        ]
+    ];
 
     /**
      * Dynamic Getters/Setter for getting/setting configuration parameters
@@ -191,20 +188,20 @@ final class Config
     {
         $environmentArg = strtolower(trim($environmentArg));
 
-        $aliases = array(
-            \Genesis\API\Constants\Environments::STAGING    => array(
+        $aliases = [
+            \Genesis\API\Constants\Environments::STAGING    => [
                 'test',
                 'testing',
                 'staging',
                 \Genesis\API\Constants\Environments::STAGING
-            ),
-            \Genesis\API\Constants\Environments::PRODUCTION => array(
+            ],
+            \Genesis\API\Constants\Environments::PRODUCTION => [
                 'live',
                 'prod',
                 'production',
                 \Genesis\API\Constants\Environments::PRODUCTION
-            ),
-        );
+            ]
+        ];
 
         foreach ($aliases as $environment => $endpointAlias) {
             foreach ($endpointAlias as $alias) {
@@ -241,19 +238,19 @@ final class Config
     {
         $endpointArg = strtolower(trim($endpointArg));
 
-        $aliases = array(
-            \Genesis\API\Constants\Endpoints::EMERCHANTPAY      => array(
+        $aliases = [
+            \Genesis\API\Constants\Endpoints::EMERCHANTPAY      => [
                 'emp',
                 'emerchantpay',
-                \Genesis\API\Constants\Endpoints::EMERCHANTPAY,
-            ),
-            \Genesis\API\Constants\Endpoints::ECOMPROCESSING    => array(
+                \Genesis\API\Constants\Endpoints::EMERCHANTPAY
+            ],
+            \Genesis\API\Constants\Endpoints::ECOMPROCESSING    => [
                 'ecp',
                 'ecomprocessing',
                 'e-comprocessing',
                 \Genesis\API\Constants\Endpoints::ECOMPROCESSING
-            ),
-        );
+            ]
+        ];
 
         foreach ($aliases as $endpoint => $endpointAlias) {
             foreach ($endpointAlias as $alias) {

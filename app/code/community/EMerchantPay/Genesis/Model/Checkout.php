@@ -118,36 +118,7 @@ class EMerchantPay_Genesis_Model_Checkout
                     ->setShippingCountry($shipping->getCountry())
                     ->setLanguage($this->getHelper()->getLocale());
 
-
-            foreach ($this->getTransactionTypes() as $transactionType) {
-                if (is_array($transactionType)) {
-                    $genesis->request()->addTransactionType(
-                        $transactionType['name'],
-                        $transactionType['parameters']
-                    );
-                } else {
-                    if (\Genesis\API\Constants\Transaction\Types::isPayByVoucher($transactionType)) {
-                        $parameters = array(
-                            'card_type' =>
-                                \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
-                            'redeem_type' =>
-                                \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT
-                        );
-                        if ($transactionType == \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY) {
-                            $parameters['product_name'] = $orderItemsList;
-                            $parameters['product_category'] = $orderItemsList;
-                        }
-
-                        $genesis
-                            ->request()
-                                ->addTransactionType($transactionType, $parameters);
-                    } else {
-                        $genesis
-                            ->request()
-                                ->addTransactionType($transactionType);
-                    }
-                }
-            }
+            $this->addTransactionTypesToGatewayRequest($genesis, $orderItemsList);
 
             $genesis->execute();
 
@@ -175,6 +146,70 @@ class EMerchantPay_Genesis_Model_Checkout
         }
 
         return $this;
+    }
+
+    /**
+     * @param \Genesis\Genesis $genesis
+     * @param string $orderItemsList
+     * @return void
+     */
+    public function addTransactionTypesToGatewayRequest(\Genesis\Genesis $genesis, $orderItemsList)
+    {
+        foreach ($this->getTransactionTypes() as $transactionType) {
+            if (is_array($transactionType)) {
+                $genesis
+                    ->request()
+                        ->addTransactionType(
+                            $transactionType['name'],
+                            $transactionType['parameters']
+                        );
+
+                continue;
+            }
+
+            switch ($transactionType) {
+                case \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE:
+                    $parameters = array(
+                        'card_type'   =>
+                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
+                        'redeem_type' =>
+                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT
+                    );
+                    break;
+                case \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY:
+                    $parameters = array(
+                        'card_type'        =>
+                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
+                        'redeem_type'      =>
+                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT,
+                        'product_name'     => $orderItemsList,
+                        'product_category' => $orderItemsList
+                    );
+                    break;
+                case \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN:
+                    $parameters = array(
+                        'merchant_customer_id' => $this->getHelper()->getCurrentUserIdHash()
+                    );
+                    break;
+                case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
+                case \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
+                    $parameters = array(
+                        'customer_account_id' => $this->getHelper()->getCurrentUserIdHash()
+                    );
+                    break;
+            }
+
+            if (!isset($parameters)) {
+                $parameters = array();
+            }
+
+            $genesis
+                ->request()
+                    ->addTransactionType(
+                        $transactionType,
+                        $parameters
+                    );
+        }
     }
 
     /**
@@ -227,6 +262,9 @@ class EMerchantPay_Genesis_Model_Checkout
                     )
                     ->setAmount(
                         $amount
+                    )
+                    ->setUsage(
+                        $this->getHelper()->__('Magento Capture')
                     );
 
             $genesis->execute();
@@ -295,22 +333,14 @@ class EMerchantPay_Genesis_Model_Checkout
         try {
             $this->getHelper()->initClient($this->getCode());
 
-            $this->getHelper()->setTokenByPaymentTransaction($payment);
-
-            $capture = $payment->lookupTransaction(
-                null,
-                Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
-            );
-            
-            /* Refund Transaction is only possible, when Capture Transaction Exists */
-            if (!isset($capture) || $capture === false) {
-                Mage::log(
-                    'Refund transaction for order #' .
-                    $payment->getOrder()->getIncrementId() .
-                    ' could not be completed! (No Capture Transaction Exists'
+            $capture = $this->getHelper()->getCaptureForRefund($payment);
+            if ($capture === null) {
+                throw new Exception(
+                    $this->getHelper()->__('Cannot Refund')
                 );
-                return $this;
             }
+
+            $this->getHelper()->setTokenByPaymentTransaction($payment);
 
             $referenceId = $capture->getTxnId();
 
@@ -332,7 +362,12 @@ class EMerchantPay_Genesis_Model_Checkout
                     ->setCurrency(
                         $payment->getOrder()->getOrderCurrencyCode()
                     )
-                    ->setAmount($amount);
+                    ->setAmount(
+                        $amount
+                    )
+                    ->setUsage(
+                        $this->getHelper()->__('Magento Refund')
+                    );
 
             $genesis->execute();
 
@@ -370,21 +405,19 @@ class EMerchantPay_Genesis_Model_Checkout
                     $responseObject->message
                 );
 
-                if (isset($capture) && $capture !== false) {
-                    $canceledProfileReferenceId = $this->getHelper()->checkAndCancelRecurringProfile(
-                        $capture
-                    );
+                $canceledProfileReferenceId = $this->getHelper()->checkAndCancelRecurringProfile(
+                    $capture
+                );
 
-                    if (isset($canceledProfileReferenceId)) {
-                        $this->getHelper()->getAdminSession()->addNotice(
-                            $this->getHelper()->__(
-                                sprintf(
-                                    "Profile #%s has been canceled!",
-                                    $canceledProfileReferenceId
-                                )
+                if (isset($canceledProfileReferenceId)) {
+                    $this->getHelper()->getAdminSession()->addNotice(
+                        $this->getHelper()->__(
+                            sprintf(
+                                "Profile #%s has been canceled!",
+                                $canceledProfileReferenceId
                             )
-                        );
-                    }
+                        )
+                    );
                 }
             } else {
                 $this->getHelper()->getAdminSession()->addError(
@@ -428,7 +461,7 @@ class EMerchantPay_Genesis_Model_Checkout
 
             $referenceId = $transactions ? reset($transactions)->getTxnId() : null;
 
-            $genesis = new \Genesis\Genesis('Financial\Void');
+            $genesis = new \Genesis\Genesis('Financial\Cancel');
 
             $genesis
                 ->request()
@@ -442,6 +475,9 @@ class EMerchantPay_Genesis_Model_Checkout
                     )
                     ->setReferenceId(
                         $referenceId
+                    )
+                    ->setUsage(
+                        $this->getHelper()->__('Magento Void')
                     );
 
             $genesis->execute();
@@ -709,12 +745,21 @@ class EMerchantPay_Genesis_Model_Checkout
                     break;
                 case \Genesis\API\Constants\Transaction\Types::ABNIDEAL:
                 case \Genesis\API\Constants\Transaction\Types::CASHU:
+                case \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN:
+                case \Genesis\API\Constants\Transaction\Types::EZEEWALLET:
+                case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
+                case \Genesis\API\Constants\Transaction\Types::INPAY:
+                case \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
                 case \Genesis\API\Constants\Transaction\Types::NETELLER:
+                case \Genesis\API\Constants\Transaction\Types::P24:
                 case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
+                case \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS:
                 case \Genesis\API\Constants\Transaction\Types::PPRO:
                 case \Genesis\API\Constants\Transaction\Types::SALE:
                 case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+                case \Genesis\API\Constants\Transaction\Types::SDD_SALE:
                 case \Genesis\API\Constants\Transaction\Types::SOFORT:
+                case \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE:
                 case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE:
                 case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D:
                     $payment->registerCaptureNotification(
@@ -801,19 +846,23 @@ class EMerchantPay_Genesis_Model_Checkout
         );
 
         $aliasMap = array(
-            \Genesis\API\Constants\Payment\Methods::EPS         =>
+            \Genesis\API\Constants\Payment\Methods::EPS =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::GIRO_PAY    =>
+            \Genesis\API\Constants\Payment\Methods::GIRO_PAY =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::PRZELEWY24  =>
+            \Genesis\API\Constants\Payment\Methods::PRZELEWY24 =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::QIWI        =>
+            \Genesis\API\Constants\Payment\Methods::QIWI =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::SAFETY_PAY  =>
+            \Genesis\API\Constants\Payment\Methods::SAFETY_PAY =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::TELEINGRESO =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::TRUST_PAY   =>
+            \Genesis\API\Constants\Payment\Methods::TRUST_PAY =>
+                \Genesis\API\Constants\Transaction\Types::PPRO,
+            \Genesis\API\Constants\Payment\Methods::BCMC =>
+                \Genesis\API\Constants\Transaction\Types::PPRO,
+            \Genesis\API\Constants\Payment\Methods::MYBANK =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
         );
 

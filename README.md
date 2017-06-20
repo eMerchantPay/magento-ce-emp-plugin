@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
-* [GenesisPHP v1.4.2](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
+* [GenesisPHP v1.7.0](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
 * PCI-certified server in order to use ```eMerchantPay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work
@@ -81,9 +81,16 @@ Supported Transactions
     * __Authorize__
     * __Authorize (3D-Secure)__
     * __CashU__
+    * __Citadel Payin__
+    * __eZeeWallet__
+    * __iDebit Payin__
+    * __INPay__
+    * __InstaDebit Payin__
     * __InitRecurringSale__
 	* __InitRecurringSale (3D-Secure)__
     * __Neteller__
+    * __P24__
+    * __PayPal Express__
     * __PaySafeCard__
     * __PayByVoucher (Sale)__
     * __PayByVoucher (oBeP)__
@@ -91,15 +98,19 @@ Supported Transactions
     * __PPRO__
     	* __eps__
     	* __GiroPay__
-    	* __Qiwi__
+    	* __Mr.Cash__
+    	* __MyBank__
     	* __Przelewy24__
+    	* __Qiwi__
     	* __SafetyPay__
     	* __TeleIngreso__
     	* __TrustPay__
     * __RecurringSale__
     * __Sale__
     * __Sale (3D-Secure)__
+    * __SDD Sale__
     * __SOFORT__
+    * __Trustly Sale__
     * __WebMoney__
 
 _Note_: If you have trouble with your credentials or terminal configuration, get in touch with our [support] team

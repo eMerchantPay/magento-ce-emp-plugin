@@ -88,20 +88,27 @@ class Methods
     const TRUST_PAY = 'trustpay';
 
     /**
+     * Mr.Cash
+     *
+     * PPRO transaction
+     */
+    const BCMC = 'bcmc';
+
+    /**
+     * MyBank
+     *
+     * PPRO transaction
+     */
+    const MYBANK = 'mybank';
+
+    /**
      * Returns all available payment methods
      * @return array
      */
     public static function getMethods()
     {
-        return array(
-            self::EPS,
-            self::GIRO_PAY,
-            self::IDEAL,
-            self::PRZELEWY24,
-            self::QIWI,
-            self::SAFETY_PAY,
-            self::TELEINGRESO,
-            self::TRUST_PAY
-        );
+        $methods = \Genesis\Utils\Common::getClassConstants(__CLASS__);
+
+        return array_values($methods);
     }
 }

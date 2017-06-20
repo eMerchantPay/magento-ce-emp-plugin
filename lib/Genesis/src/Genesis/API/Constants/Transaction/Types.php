@@ -157,64 +157,148 @@ class Types
     const SOFORT = 'sofort';
 
     /**
+     * Global payment system, that makes instant cross-border payments more secure, regulated by Danish and Swiss FSA
+     */
+    const INPAY = 'inpay';
+
+    /**
+     * P24 is an online banking payment, popular in Poland
+     */
+    const P24 = 'p24';
+
+    /**
+     * Trustly is a fast and secure oBeP-style alternative payment method. It is free of charge and
+     * allows you to deposit money directly from your online bank account.
+     */
+    const TRUSTLY_SALE = 'trustly_sale';
+
+    /**
+     * Trustly is an oBeP-style alternative payment method that allows you to
+     * withdraw money directly from your online bank account using your bank credentials.
+     */
+    const TRUSTLY_WITHDRAWAL = 'trustly_withdrawal';
+
+    /**
+     * PayPal Express Checkout is a fast, easy way for buyers to pay with PayPal.
+     * Express Checkout eliminates one of the major causes of checkout abandonment by giving buyers
+     * all the transaction details at once, including order details, shipping options, insurance choices, and tax totals
+     */
+    const PAYPAL_EXPRESS = 'paypal_express';
+
+    /**
+     * Sepa Direct Debit Payment, popular in Germany.
+     * Single Euro Payments Area (SEPA) allows consumers to make cashless Euro payments to
+     * any beneficiary located anywhere in the Euro area using only a single bank account
+     */
+    const SDD_SALE = 'sdd_sale';
+
+    /**
+     * Sepa Direct Debit Payout, popular in Germany.
+     * Processed as a SEPA CreditTransfer and can be used for all kind of payout services
+     * across the EU with 1 day settlement. Suitable for Gaming, Forex-Binaries, Affiliate Programs or Merchant payouts
+     */
+    const SDD_PAYOUT = 'sdd_payout';
+
+    /**
+     * Sepa Direct Debit Refund Transaction.
+     * Refunds allow to return already billed amounts to customers.
+     */
+    const SDD_REFUND = 'sdd_refund';
+
+    /**
+     * Sepa Direct Debit initial recurring
+     */
+    const SDD_INIT_RECURRING_SALE = 'sdd_init_recurring_sale';
+
+    /**
+     * Sepa Direct Debit RecurringSale transaction is a "repeated" transaction,
+     * which follows and references an SDD initial transaction
+     */
+    const SDD_RECURRING_SALE = 'sdd_recurring_sale';
+
+    /**
+     * iDebit connects consumers to their online banking directly from checkout, enabling secure,
+     * real-time payments without a credit card.
+     * Using iDebit allows consumers to transfer funds to merchants without
+     * revealing their personal banking information.
+     * iDebit Payin is only asynchronous and uses eCheck.
+     */
+    const IDEBIT_PAYIN = 'idebit_payin';
+
+    /**
+     * iDebit connects consumers to their online banking directly from checkout, enabling secure,
+     * real-time payments without a credit card.
+     * Using iDebit allows consumers to transfer funds to merchants without
+     * revealing their personal banking information.
+     * iDebit Payout is only synchronous and uses eCheck.
+     */
+    const IDEBIT_PAYOUT = 'idebit_payout';
+
+    /**
+     * InstaDebit connects consumers to their online banking directly from checkout, enabling secure,
+     * real- time payments without a credit card.
+     * Using InstaDebit allows consumers to transfer funds to merchants without
+     * revealing their personal banking information.
+     * InstaDebit Payin is only asynchronous and uses online bank transfer.
+     */
+    const INSTA_DEBIT_PAYIN = 'insta_debit_payin';
+
+    /**
+     * InstaDebit connects consumers to their online banking directly from checkout, enabling secure,
+     * real- time payments without a credit card.
+     * Using InstaDebit allows consumers to transfer funds to merchants without
+     * revealing their personal banking information.
+     * InstaDebit Payout is only synchronous and uses online bank transfer.
+     */
+    const INSTA_DEBIT_PAYOUT = 'insta_debit_payout';
+
+    /**
+     * Citadel is an oBeP-style alternative payment method.
+     * It offers merchants the ability to send/receive consumer payments via the use of bank transfer functionality
+     * available from the consumer’s online banking website.
+     *
+     * Payins are only asynchronous. After initiating a transaction the transaction status is set to pending async and
+     * the consumer is redirected to Citadel’s Instant Banking website.
+     */
+    const CITADEL_PAYIN = 'citadel_payin';
+
+    /**
+     * Citadel is an oBeP-style alternative payment method.
+     * It offers merchants the ability to send/receive consumer payments via the use of bank transfer functionality
+     * available from the consumer’s online banking website.
+     *
+     * The workflow for Payouts is synchronous, there is no redirect to the Citadel’s Instant Banking website.
+     * There are different required fields per country, e.g. IBAN and SWIFT Code or Account Number and Branch Code
+     */
+    const CITADEL_PAYOUT = 'citadel_payout';
+
+    /**
      * Check whether this is a valid (known) transaction type
      *
+     * @param string $type
      * @return bool
      */
     public static function isValidTransactionType($type)
     {
-        $transactionTypesList = array(
-            self::AVS,
-            self::ACCOUNT_VERIFICATION,
-            self::AUTHORIZE,
-            self::AUTHORIZE_3D,
-            self::SALE,
-            self::SALE_3D,
-            self::CAPTURE,
-            self::REFUND,
-            self::VOID,
-            self::CREDIT,
-            self::PAYOUT,
-            self::INIT_RECURRING_SALE,
-            self::INIT_RECURRING_SALE_3D,
-            self::RECURRING_SALE,
-            self::ABNIDEAL,
-            self::CASHU,
-            self::EZEEWALLET,
-            self::NETELLER,
-            self::POLI,
-            self::WEBMONEY,
-            self::PAYBYVOUCHER_YEEPAY,
-            self::PAYBYVOUCHER_SALE,
-            self::PAYSAFECARD,
-            self::PPRO,
-            self::SOFORT
-        );
+        $transactionTypes = \Genesis\Utils\Common::getClassConstants(__CLASS__);
 
-        if (in_array($type, $transactionTypesList)) {
-            return true;
-        }
-
-        return false;
+        return in_array(strtolower($type), $transactionTypes);
     }
 
     /**
      * Check whether this is a valid (known) transaction type
      *
+     * @param string $type
      * @return bool
      */
     public static function isPayByVoucher($type)
     {
-        $transactionTypesList = array(
+        $transactionTypesList = [
             self::PAYBYVOUCHER_YEEPAY,
-            self::PAYBYVOUCHER_SALE,
-        );
+            self::PAYBYVOUCHER_SALE
+        ];
 
-        if (in_array($type, $transactionTypesList)) {
-            return true;
-        }
-
-        return false;
+        return in_array($type, $transactionTypesList);
     }
 
     /**
@@ -226,26 +310,28 @@ class Types
     {
         switch ($type) {
             case self::PPRO:
-                return array(
-                    'payment_method' =>
-                        \Genesis\API\Constants\Payment\Methods::getMethods()
-                );
+                return [
+                    'payment_method' => \Genesis\API\Constants\Payment\Methods::getMethods()
+                ];
                 break;
 
             case self::PAYBYVOUCHER_SALE:
             case self::PAYBYVOUCHER_YEEPAY:
-                $customParameters = array(
+                $customParameters = [
                     'card_type'   =>
                         \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::getCardTypes(),
                     'redeem_type' =>
                         \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::getRedeemTypes()
-                );
+                ];
 
                 if ($type == self::PAYBYVOUCHER_YEEPAY) {
-                    $customParameters = array_merge($customParameters, array(
-                        'product_name'     => null,
-                        'product_category' => null
-                    ));
+                    $customParameters = array_merge(
+                        $customParameters,
+                        [
+                            'product_name'     => null,
+                            'product_category' => null
+                        ]
+                    );
                 }
 
                 return $customParameters;

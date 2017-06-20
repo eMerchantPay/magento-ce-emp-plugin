@@ -172,14 +172,15 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      * and salted to avoid duplication
      *
      * @param string $prefix Prefix of the orderId
+     * @param int $length Length of the generated string
      *
      * @return string
      */
-    public function genTransactionId($prefix = '')
+    public function genTransactionId($prefix = '', $length = 30)
     {
         $hash = Mage::helper('core')->uniqHash();
 
-        return (string)$prefix . substr($hash, -(strlen($hash) - strlen($prefix)));
+        return substr($prefix . substr($hash, -(strlen($hash) - strlen($prefix))), 0, $length);
     }
 
     /**
@@ -902,5 +903,96 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         return $default;
+    }
+
+    /**
+     * Retrieves the consumer's user id
+     *
+     * @return int
+     */
+    public static function getCurrentUserId()
+    {
+        /** @var Mage_Customer_Helper_Data $helper */
+        $helper = Mage::helper('customer');
+        if ($helper->isLoggedIn()) {
+            return $helper->getCurrentCustomer()->getId();
+        }
+        return 0;
+    }
+
+    /**
+     * @param int $length
+     * @return string
+     */
+    public static function getCurrentUserIdHash($length = 30)
+    {
+        $userId = self::getCurrentUserId();
+
+        $userHash = $userId > 0 ? sha1($userId) : self::genTransactionId();
+
+        return substr($userHash, 0, $length);
+    }
+
+    /**
+     * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
+     *
+     * @return bool
+     */
+    public function getIsRefundable(Varien_Object $payment)
+    {
+        $refundableGatewayTransactionTypes = array(
+            \Genesis\API\Constants\Transaction\Types::SALE,
+            \Genesis\API\Constants\Transaction\Types::SALE_3D,
+            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE,
+            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D,
+            \Genesis\API\Constants\Transaction\Types::CASHU,
+            \Genesis\API\Constants\Transaction\Types::PPRO,
+            \Genesis\API\Constants\Transaction\Types::INPAY,
+            \Genesis\API\Constants\Transaction\Types::P24,
+            \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS,
+            \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE
+        );
+
+        return in_array(
+            $this->getGenesisPaymentTransactionType($payment),
+            $refundableGatewayTransactionTypes
+        );
+    }
+
+    /**
+     * Looks for the capture transaction, checks if it supports refunds and returns it.
+     * Adds to Mage::log, if capture transaction is not found or is not refundable.
+     *
+     * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
+     * @return Mage_Sales_Model_Order_Payment_Transaction|null
+     */
+    public function getCaptureForRefund(Varien_Object $payment) {
+        $capture = $payment->lookupTransaction(
+            null,
+            Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE
+        );
+
+        /* Refund Transaction is only possible, when Capture Transaction Exists */
+        if ($capture === false) {
+            Mage::log(
+                'Refund transaction for order #' .
+                $payment->getOrder()->getIncrementId() .
+                ' could not be completed! (No Capture Transaction Exists)'
+            );
+
+            return null;
+        }
+
+        if (!$this->getIsRefundable($capture)) {
+            Mage::log(
+                'Refund transaction for order #' .
+                $payment->getOrder()->getIncrementId() .
+                ' could not be completed! (This transaction type does\'t support refund)'
+            );
+
+            return null;
+        }
+
+        return $capture;
     }
 }

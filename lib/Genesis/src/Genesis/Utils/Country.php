@@ -36,7 +36,7 @@ final class Country
      * @var array
      */
     public static $countries
-        = array(
+        = [
             'AF' => 'Afghanistan',
             'AX' => 'Aland Islands',
             'AL' => 'Albania',
@@ -281,8 +281,8 @@ final class Country
             'EH' => 'Western Sahara',
             'YE' => 'Yemen',
             'ZM' => 'Zambia',
-            'ZW' => 'Zimbabwe',
-        );
+            'ZW' => 'Zimbabwe'
+        ];
 
     /**
      * Get a country's name by its ISO Code
@@ -310,5 +310,15 @@ final class Country
     public static function getCountryISO($country_name)
     {
         return array_search(strtolower($country_name), array_map('strtolower', self::$countries));
+    }
+
+    /**
+     * Retrieves a list with all supported countries
+     *
+     * @return array
+     */
+    public static function getList()
+    {
+        return \Genesis\Utils\Common::getArrayKeys(self::$countries);
     }
 }
