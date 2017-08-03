@@ -315,9 +315,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
                 'name' =>
                     $product->getName(),
                 'qty'  =>
-                    isset($productResult[$product->getSku()]['qty'])
-                        ? $productResult[$product->getSku()]['qty']
-                        : 1,
+                    $item->getData('qty_ordered')
             );
         }
 
