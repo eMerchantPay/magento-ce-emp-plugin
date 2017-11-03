@@ -155,7 +155,9 @@ class EMerchantPay_Genesis_Model_Checkout
      */
     public function addTransactionTypesToGatewayRequest(\Genesis\Genesis $genesis, $orderItemsList)
     {
-        foreach ($this->getTransactionTypes() as $transactionType) {
+        $types = $this->getTransactionTypes();
+
+        foreach ($types as $transactionType) {
             if (is_array($transactionType)) {
                 $genesis
                     ->request()
@@ -728,50 +730,15 @@ class EMerchantPay_Genesis_Model_Checkout
                     null
                 );
 
-            if ($paymentTransaction->status == \Genesis\API\Constants\Transaction\States::APPROVED) {
+            $trxStatus = new \Genesis\API\Constants\Transaction\States($paymentTransaction->status);
+
+            if ($trxStatus->isApproved()) {
                 $payment->setIsTransactionClosed(false);
+
+                $this->registerNotifications($paymentTransaction, $payment);
             } else {
                 $payment->setIsTransactionClosed(true);
             }
-
-            // @codingStandardsIgnoreStart
-            switch ($paymentTransaction->transaction_type) {
-                // @codingStandardsIgnoreEnd
-                case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-                case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
-                    $payment->registerAuthorizationNotification(
-                        $paymentTransaction->amount
-                    );
-                    break;
-                case \Genesis\API\Constants\Transaction\Types::ABNIDEAL:
-                case \Genesis\API\Constants\Transaction\Types::CASHU:
-                case \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN:
-                case \Genesis\API\Constants\Transaction\Types::EZEEWALLET:
-                case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
-                case \Genesis\API\Constants\Transaction\Types::INPAY:
-                case \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
-                case \Genesis\API\Constants\Transaction\Types::NETELLER:
-                case \Genesis\API\Constants\Transaction\Types::P24:
-                case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
-                case \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS:
-                case \Genesis\API\Constants\Transaction\Types::PPRO:
-                case \Genesis\API\Constants\Transaction\Types::SALE:
-                case \Genesis\API\Constants\Transaction\Types::SALE_3D:
-                case \Genesis\API\Constants\Transaction\Types::SDD_SALE:
-                case \Genesis\API\Constants\Transaction\Types::SOFORT:
-                case \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE:
-                case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE:
-                case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D:
-                    $payment->registerCaptureNotification(
-                        $paymentTransaction->amount
-                    );
-                    break;
-                default:
-                    break;
-            }
-
-            $isTransactionApproved =
-                ($paymentTransaction->status == \Genesis\API\Constants\Transaction\States::APPROVED);
 
             // @codingStandardsIgnoreStart
             if ($this->getHelper()->getIsTransactionTypeInitRecurring($paymentTransaction->transaction_type)) {
@@ -786,7 +753,7 @@ class EMerchantPay_Genesis_Model_Checkout
                 if ($recurringProfile && $recurringProfile->getId()) {
                     if ($recurringProfile->getState() == Mage_Sales_Model_Recurring_Profile::STATE_PENDING) {
                         $recurringProfile->setState(
-                            ($isTransactionApproved
+                            ($trxStatus->isApproved()
                                 ? Mage_Sales_Model_Recurring_Profile::STATE_ACTIVE
                                 : Mage_Sales_Model_Recurring_Profile::STATE_CANCELED
                             )
@@ -811,6 +778,48 @@ class EMerchantPay_Genesis_Model_Checkout
         }
 
         return false;
+    }
+
+    private function registerNotifications($paymentTransaction, $payment)
+    {
+        // @codingStandardsIgnoreStart
+        switch ($paymentTransaction->transaction_type) {
+            // @codingStandardsIgnoreEnd
+            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
+            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
+                $payment->registerAuthorizationNotification(
+                    $paymentTransaction->amount
+                );
+                break;
+            case \Genesis\API\Constants\Transaction\Types::ABNIDEAL:
+            case \Genesis\API\Constants\Transaction\Types::ALIPAY:
+            case \Genesis\API\Constants\Transaction\Types::CASHU:
+            case \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN:
+            case \Genesis\API\Constants\Transaction\Types::EZEEWALLET:
+            case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
+            case \Genesis\API\Constants\Transaction\Types::INPAY:
+            case \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
+            case \Genesis\API\Constants\Transaction\Types::NETELLER:
+            case \Genesis\API\Constants\Transaction\Types::P24:
+            case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
+            case \Genesis\API\Constants\Transaction\Types::PAYSEC_PAYIN:
+            case \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS:
+            case \Genesis\API\Constants\Transaction\Types::PPRO:
+            case \Genesis\API\Constants\Transaction\Types::SALE:
+            case \Genesis\API\Constants\Transaction\Types::SALE_3D:
+            case \Genesis\API\Constants\Transaction\Types::SDD_SALE:
+            case \Genesis\API\Constants\Transaction\Types::SOFORT:
+            case \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE:
+            case \Genesis\API\Constants\Transaction\Types::WECHAT:
+            case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE:
+            case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D:
+                $payment->registerCaptureNotification(
+                    $paymentTransaction->amount
+                );
+                break;
+            default:
+                break;
+        }
     }
 
     /**

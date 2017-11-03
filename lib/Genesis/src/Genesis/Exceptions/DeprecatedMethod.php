@@ -20,41 +20,30 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
-namespace Genesis\API\Request\Financial\SDD;
-
-use Genesis\Utils\Common as CommonUtils;
+namespace Genesis\Exceptions;
 
 /**
- * Class Payout
+ * Class DeprecatedMethod
  *
- * SDD Payout Transactions
- *
- * @package Genesis\API\Request\Financial\SDD
+ * @package Genesis\Exceptions
  */
-class Payout extends \Genesis\API\Request\Financial\SDD\Sale
+class DeprecatedMethod extends \Exception
 {
     /**
-     * Set the required fields
+     * Construct
      *
-     * @return void
+     * @param string $message
+     * @param int $code
+     * @param null $previous
      */
-    protected function setRequiredFields()
+    public function __construct($message = '', $code = 0, $previous = null)
     {
-        parent::setRequiredFields();
+        if (empty($message)) {
+            $message =
+                'You\'re trying to call a deprecated method!' . PHP_EOL .
+                'For proper usage, please refer to the documentation!';
+        }
 
-        CommonUtils::appendItemsToArrayObj(
-            $this->requiredFieldValues,
-            'billing_country',
-            ['BG', 'HR', 'CZ', 'DK', 'UK', 'HU', 'IS', 'LI', 'NO', 'PL', 'RO', 'SE', 'CH']
-        );
-    }
-
-    /**
-     * Returns the Request transaction type
-     * @return string
-     */
-    protected function getTransactionType()
-    {
-        return \Genesis\API\Constants\Transaction\Types::SDD_PAYOUT;
+        parent::__construct($message, $code, $previous);
     }
 }

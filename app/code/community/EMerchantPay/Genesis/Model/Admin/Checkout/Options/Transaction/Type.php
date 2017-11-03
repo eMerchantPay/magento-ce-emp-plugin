@@ -67,6 +67,8 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
         return array(
             \Genesis\API\Constants\Transaction\Types::ABNIDEAL            =>
                 Mage::helper('emerchantpay')->__('ABN iDEAL'),
+            \Genesis\API\Constants\Transaction\Types::ALIPAY              =>
+                Mage::helper('emerchantpay')->__('Alipay'),
             \Genesis\API\Constants\Transaction\Types::AUTHORIZE           =>
                 Mage::helper('emerchantpay')->__('Authorize'),
             \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D        =>
@@ -97,6 +99,8 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
                 Mage::helper('emerchantpay')->__('P24'),
             \Genesis\API\Constants\Transaction\Types::PAYSAFECARD         =>
                 Mage::helper('emerchantpay')->__('PaySafeCard'),
+            \Genesis\API\Constants\Transaction\Types::PAYSEC_PAYIN        =>
+                Mage::helper('emerchantpay')->__('PaySec'),
             \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE   =>
                 Mage::helper('emerchantpay')->__('PayByVoucher (Sale)'),
             \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY =>
@@ -127,6 +131,8 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
                 Mage::helper('emerchantpay')->__('TrustPay'),
             \Genesis\API\Constants\Transaction\Types::WEBMONEY            =>
                 Mage::helper('emerchantpay')->__('WebMoney'),
+            \Genesis\API\Constants\Transaction\Types::WECHAT              =>
+                Mage::helper('emerchantpay')->__('WeChat'),
         );
     }
 }

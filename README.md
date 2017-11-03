@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
-* [GenesisPHP v1.7.0](https://github.com/GenesisGateway/genesis_php) - (Integrated in Module)
+* [GenesisPHP v1.8.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.8.3) - (Integrated in Module)
 * PCI-certified server in order to use ```eMerchantPay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work
@@ -16,7 +16,7 @@ as intended with Magento __Enterprise Edition__
 GenesisPHP Requirements
 ------------
 
-* PHP version 5.3.2 or newer
+* PHP version 5.5.9 or newer
 * PHP Extensions:
     * [BCMath](https://php.net/bcmath)
     * [CURL](https://php.net/curl) (required, only if you use the curl network interface)
@@ -78,6 +78,7 @@ Supported Transactions
 
 * ```eMerchantPay Checkout``` Payment Method
     * __ABN iDEAL__
+    * __Alipay__
     * __Authorize__
     * __Authorize (3D-Secure)__
     * __CashU__
@@ -92,6 +93,7 @@ Supported Transactions
     * __P24__
     * __PayPal Express__
     * __PaySafeCard__
+    * __PaySec__
     * __PayByVoucher (Sale)__
     * __PayByVoucher (oBeP)__
     * __POLi__
@@ -112,6 +114,7 @@ Supported Transactions
     * __SOFORT__
     * __Trustly Sale__
     * __WebMoney__
+    * __WeChat__
 
 _Note_: If you have trouble with your credentials or terminal configuration, get in touch with our [support] team
 
