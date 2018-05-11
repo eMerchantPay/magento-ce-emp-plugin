@@ -1,14 +1,14 @@
-eMerchantPay Gateway Module for Magento CE
+emerchantpay Gateway Module for Magento CE
 =============================
 
-This is a Payment Module for Magento Community Edition, that gives you the ability to process payments through eMerchantPay's Payment Gateway - Genesis.
+This is a Payment Module for Magento Community Edition, that gives you the ability to process payments through emerchantpay's Payment Gateway - Genesis.
 
 Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
 * [GenesisPHP v1.8.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.8.3) - (Integrated in Module)
-* PCI-certified server in order to use ```eMerchantPay Direct```
+* PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work
 as intended with Magento __Enterprise Edition__
@@ -28,7 +28,7 @@ GenesisPHP Requirements
 Installation (via Magento Connect)
 ---------------------
 
-* Navigate to our extention at Magento Connect - [eMerchantPay Payment Gateway - Magento Connect]
+* Navigate to our extention at Magento Connect - [emerchantpay Payment Gateway - Magento Connect]
 * Click ```Install Now``` and get the ```Extension Key```
 * Login inside the Admin Panel and go to ```System``` -> ```Magento Connect``` -> ```Magento Connect Manager```
 * Paste the ```Extension Key``` and Click ```Install```
@@ -49,13 +49,13 @@ Installation (manual)
 
 * Upload the contents of the folder (excluding ```README.md```) to the ```<root>``` folder of your Magento installation
 * Login inside the __Admin Panel__ and go to ```System``` -> ```Configuration``` -> ```Payment Methods```
-* If one of the Payment Methods ```eMerchantPay Direct``` or ```eMerchantPay Checkout``` is not yet available, 
+* If one of the Payment Methods ```emerchantpay Direct``` or ```emerchantpay Checkout``` is not yet available, 
   go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache```
 * Check ```Enable```, set the correct credentials, select your prefered payment method and click ```Save config```
 
 Configure Magento over secured HTTPS Connection
 ---------------------
-This configuration is needed in order to use the ```eMerchantPay Direct``` Payment Method.
+This configuration is needed in order to use the ```emerchantpay Direct``` Payment Method.
 
 Steps:
 * Ensure you have installed a valid __SSL Certificate__ on your __Web Server__ & you have configured your __Virtual Host__ correctly.
@@ -67,7 +67,7 @@ Steps:
 
 Supported Transactions
 ---------------------
-* ```eMerchantPay Direct``` Payment Method
+* ```emerchantpay Direct``` Payment Method
 	* __Authorize__
 	* __Authorize (3D-Secure)__
 	* __InitRecurringSale__
@@ -76,7 +76,7 @@ Supported Transactions
 	* __Sale__
 	* __Sale (3D-Secure)__
 
-* ```eMerchantPay Checkout``` Payment Method
+* ```emerchantpay Checkout``` Payment Method
     * __ABN iDEAL__
     * __Alipay__
     * __Authorize__
@@ -121,5 +121,5 @@ _Note_: If you have trouble with your credentials or terminal configuration, get
 You're now ready to process payments through our gateway.
 
 [ModMan]: https://github.com/colinmollenhour/modman
-[eMerchantPay Payment Gateway - Magento Connect]: https://www.magentocommerce.com/magento-connect/catalog/product/view/id/31438/s/emerchantpay-payment-gateway/
+[emerchantpay Payment Gateway - Magento Connect]: https://www.magentocommerce.com/magento-connect/catalog/product/view/id/31438/s/emerchantpay-payment-gateway/
 [support]: mailto:tech-support@emerchantpay.net

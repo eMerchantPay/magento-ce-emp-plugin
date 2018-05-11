@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2016 eMerchantPay Ltd.
+Copyright (C) 2018 emerchantpay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -12,14 +12,14 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-@author      eMerchantPay
-@copyright   2016 eMerchantPay Ltd.
+@author      emerchantpay
+@copyright   2018 emerchantpay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.5.0</version>
+         <version>1.5.1</version>
        </EMerchantPay_Genesis>
     </modules>
 
@@ -44,7 +44,7 @@ GNU General Public License for more details.
 
         <payment>
             <groups>
-                <emerchantpay>eMerchantPay</emerchantpay>
+                <emerchantpay>emerchantpay</emerchantpay>
             </groups>
         </payment>
         
@@ -110,7 +110,7 @@ GNU General Public License for more details.
             <emerchantpay_direct>
                 <model>emerchantpay/direct</model>
                 <order_status>pending</order_status>
-                <title>Credit Card (eMerchantPay Direct)</title>
+                <title>Credit Card (emerchantpay Direct)</title>
                 <cctypes>VI,MC,SM,AE,DI,JCB,OT</cctypes>
                 <genesis_type>authorize</genesis_type>
                 <recurring_enabled>0</recurring_enabled>
@@ -120,7 +120,7 @@ GNU General Public License for more details.
             </emerchantpay_direct>
             <emerchantpay_checkout>
                 <model>emerchantpay/checkout</model>
-                <title>Credit Card (eMerchantPay Checkout)</title>
+                <title>Credit Card (emerchantpay Checkout)</title>
                 <payment_action>order</payment_action>
                 <genesis_types>sale</genesis_types>
                 <recurring_enabled>0</recurring_enabled>

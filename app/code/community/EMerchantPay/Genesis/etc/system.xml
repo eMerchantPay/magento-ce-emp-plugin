@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-Copyright (C) 2016 eMerchantPay Ltd.
+Copyright (C) 2018 emerchantpay Ltd.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -12,8 +12,8 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
-@author      eMerchantPay
-@copyright   2016 eMerchantPay Ltd.
+@author      emerchantpay
+@copyright   2018 emerchantpay Ltd.
 @license     http://opensource.org/licenses/gpl-2.0.php GNU General Public License, version 2 (GPL-2.0)
 -->
 <config>
@@ -21,7 +21,7 @@ GNU General Public License for more details.
         <payment>
             <groups>
                 <emerchantpay_direct translate="label" module="emerchantpay">
-                    <label>eMerchantPay Direct</label>
+                    <label>emerchantpay Direct</label>
                     <comment>
                         <![CDATA[
                             Direct API - allow customers to enter their CreditCard information on your website.
@@ -361,7 +361,7 @@ GNU General Public License for more details.
                     </fields>
                 </emerchantpay_direct>
                 <emerchantpay_checkout translate="label" module="emerchantpay">
-                    <label>eMerchantPay Checkout</label>
+                    <label>emerchantpay Checkout</label>
                     <comment>
                         <![CDATA[
                             Checkout payment method - receive credit-card payments, without the need of PCI-DSS certificate or HTTPS.
