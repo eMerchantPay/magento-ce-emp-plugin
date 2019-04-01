@@ -7,11 +7,13 @@ Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
-* [GenesisPHP v1.8.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.8.3) - (Integrated in Module)
+* [GenesisPHP v1.13.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.13.0) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work
 as intended with Magento __Enterprise Edition__
+
+*Note:* If you are using Tokenization with the Checkout module, Guest Checkout must be disabled.
 
 GenesisPHP Requirements
 ------------
@@ -90,10 +92,10 @@ Supported Transactions
     * __InitRecurringSale__
 	* __InitRecurringSale (3D-Secure)__
     * __Neteller__
+    * __OnlineBanking__
     * __P24__
     * __PayPal Express__
     * __PaySafeCard__
-    * __PaySec__
     * __PayByVoucher (Sale)__
     * __PayByVoucher (oBeP)__
     * __POLi__
@@ -105,7 +107,6 @@ Supported Transactions
     	* __Przelewy24__
     	* __Qiwi__
     	* __SafetyPay__
-    	* __TeleIngreso__
     	* __TrustPay__
     * __RecurringSale__
     * __Sale__

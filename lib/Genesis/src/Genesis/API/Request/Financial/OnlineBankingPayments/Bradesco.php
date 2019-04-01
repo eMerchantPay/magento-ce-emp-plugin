@@ -21,16 +21,16 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Genesis\API\Request\Financial\Alternatives;
+namespace Genesis\API\Request\Financial\OnlineBankingPayments;
 
 /**
- * Class Paysafecard
+ * Class Bradesco
  *
- * Alternative payment method
+ * Bradesco is a payment service in Brazil
  *
- * @package Genesis\API\Request\Financial\Alternatives
+ * @package Genesis\API\Request\Financial\OnlineBankingPayments
  */
-class Paysafecard extends \Genesis\API\Request\Base\Financial\Alternative
+class Bradesco extends \Genesis\API\Request\Base\Financial\SouthAmericanPayment
 {
     /**
      * Returns the Request transaction type
@@ -38,27 +38,14 @@ class Paysafecard extends \Genesis\API\Request\Base\Financial\Alternative
      */
     protected function getTransactionType()
     {
-        return \Genesis\API\Constants\Transaction\Types::PAYSAFECARD;
+        return \Genesis\API\Constants\Transaction\Types::BRADESCO;
     }
 
     /**
-     * Set the required fields
-     *
-     * @return void
+     * @return array
      */
-    protected function setRequiredFields()
+    public function getAllowedBillingCountries()
     {
-        parent::setRequiredFields();
-
-        $requiredFieldValues = [
-            'billing_country' => [
-                'AT', 'BE', 'CY', 'CZ', 'DK', 'FI', 'FR', 'DE', 'GR', 'IE',
-                'IT', 'LU', 'NL', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES',
-                'SE', 'CH', 'UK', 'HU', 'HR', 'MT', 'US', 'CA', 'MX', 'TR'
-            ],
-            'currency'        => \Genesis\Utils\Currency::getList()
-        ];
-
-        $this->requiredFieldValues = \Genesis\Utils\Common::createArrayObject($requiredFieldValues);
+        return ['BR'];
     }
 }

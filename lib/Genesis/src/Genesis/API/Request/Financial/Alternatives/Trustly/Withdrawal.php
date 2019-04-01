@@ -63,5 +63,15 @@ class Withdrawal extends \Genesis\API\Request\Financial\Alternatives\Trustly\Sal
         ];
 
         $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
+
+        $requiredFieldValues = [
+            'billing_country' => [
+                'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU',
+                'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'
+            ],
+            'currency'        => \Genesis\Utils\Currency::getList()
+        ];
+
+        $this->requiredFieldValues = \Genesis\Utils\Common::createArrayObject($requiredFieldValues);
     }
 }

@@ -225,4 +225,18 @@ class Notification
 
         return $builder->getDocument();
     }
+
+    /**
+     * Render the Gateway response
+     *
+     * @return void
+     */
+    public function renderResponse()
+    {
+        if (!headers_sent()) {
+            header('Content-type: application/xml', true);
+        }
+
+        echo $this->generateResponse();
+    }
 }

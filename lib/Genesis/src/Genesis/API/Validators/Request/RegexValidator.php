@@ -41,6 +41,16 @@ class RegexValidator extends \Genesis\API\Validators\Request\Base\Validator
     const PATTERN_CREDIT_CART_EXP_YEAR  = '/^(20)\d{2}$/';
 
     /**
+     * GiftCards Regex Validation Patterns
+     */
+    const PATTERN_GIFT_CARD_NUMBER      = '/^\d+$/';
+
+    /**
+     * Vouchers Regex Validation Patterns
+     */
+    const PATTERN_NEOSURF_VOUCHER_NUMBER = '/^[A-Za-z0-9]{1,10}$/';
+
+    /**
      * Regex expression
      *
      * @var string

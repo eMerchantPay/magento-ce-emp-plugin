@@ -178,105 +178,61 @@ class PPRO extends \Genesis\API\Request\Base\Financial
     {
         $requiredFieldValuesConditional = [
             'payment_type' => [
-                PaymentMethods::EPS         => [
+                PaymentMethods::EPS        => [
                     [
                         'billing_country' => 'AT',
                         'currency'        => 'EUR'
                     ]
                 ],
-                PaymentMethods::TELEINGRESO => [
+                PaymentMethods::SAFETY_PAY => [
                     [
-                        'billing_country' => 'ES',
-                        'currency'        => 'EUR'
-                    ]
-                ],
-                PaymentMethods::SAFETY_PAY  => [
-                    [
-                        'billing_country' => ['AT', 'DE', 'CA', 'MX', 'NI', 'CR', 'PA', 'CO', 'PE', 'BR', 'NL'],
+                        'billing_country' => [
+                            'AT', 'BE', 'BR', 'CL', 'CO', 'CR', 'DE', 'EC', 'ES', 'MX', 'NL', 'PE', 'PR'
+                        ],
                         'currency'        => ['EUR', 'USD']
                     ]
                 ],
-                PaymentMethods::TRUST_PAY   => [
-                    [
-                        'billing_country' => 'BA',
-                        'currency'        => 'BAM'
-                    ],
-                    [
-                        'billing_country' => 'BG',
-                        'currency'        => 'BGN'
-                    ],
+                PaymentMethods::TRUST_PAY  => [
                     [
                         'billing_country' => 'CZ',
                         'currency'        => 'CZK'
                     ],
                     [
-                        'billing_country' => 'EE',
-                        'currency'        => 'EEK'
-                    ],
-                    [
-                        'billing_country' => ['EE', 'SL', 'SK'],
+                        'billing_country' => ['CZ', 'SK'],
                         'currency'        => 'EUR'
-                    ],
-                    [
-                        'billing_country' => 'GB',
-                        'currency'        => 'GBP'
-                    ],
-                    [
-                        'billing_country' => 'HR',
-                        'currency'        => 'HRK'
-                    ],
-                    [
-                        'billing_country' => 'HU',
-                        'currency'        => 'HUF'
-                    ],
-                    [
-                        'billing_country' => 'LT',
-                        'currency'        => 'LTL'
-                    ],
-                    [
-                        'billing_country' => 'LV',
-                        'currency'        => 'LVL'
-                    ],
-                    [
-                        'billing_country' => 'PL',
-                        'currency'        => 'PLN'
-                    ],
-                    [
-                        'billing_country' => 'RO',
-                        'currency'        => 'RON'
                     ]
                 ],
-                PaymentMethods::PRZELEWY24  => [
+                PaymentMethods::PRZELEWY24 => [
                     [
                         'billing_country' => 'PL',
                         'currency'        => 'PLN'
                     ]
                 ],
-                PaymentMethods::IDEAL       => [
+                PaymentMethods::IDEAL      => [
                     [
                         'billing_country' => 'NL',
                         'currency'        => 'EUR'
                     ]
                 ],
-                PaymentMethods::QIWI        => [
+                PaymentMethods::QIWI       => [
                     [
                         'billing_country' => 'RU',
                         'currency'        => ['EUR', 'RUB']
                     ]
                 ],
-                PaymentMethods::GIRO_PAY    => [
+                PaymentMethods::GIRO_PAY   => [
                     [
                         'billing_country' => 'DE',
                         'currency'        => 'EUR'
                     ]
                 ],
-                PaymentMethods::BCMC        => [
+                PaymentMethods::BCMC       => [
                     [
                         'billing_country' => 'BE',
                         'currency'        => 'EUR'
                     ]
                 ],
-                PaymentMethods::MYBANK      => [
+                PaymentMethods::MYBANK     => [
                     [
                         'billing_country' => ['BE', 'FR', 'IT', 'LU'],
                         'currency'        => 'EUR'

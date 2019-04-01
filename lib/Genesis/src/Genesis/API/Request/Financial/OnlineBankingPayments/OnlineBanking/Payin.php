@@ -21,50 +21,23 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Genesis\API\Request\Financial\OnlineBankingPayments\PaySec;
+namespace Genesis\API\Request\Financial\OnlineBankingPayments\OnlineBanking;
 
 use Genesis\API\Traits\Request\AddressInfoAttributes;
 use Genesis\API\Traits\Request\Financial\AsyncAttributes;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
-use Genesis\API\Validators\Request\RegexValidator;
 
 /**
- * Class Payout
+ * Class Payin
  *
- * PaySec Payout - oBeP-style alternative payment method
+ * OnlineBanking Payin - oBeP-style alternative payment method
  *
- * @package Genesis\API\Request\Financial\OnlineBankingPayments\PaySec
+ * @package Genesis\API\Request\Financial\OnlineBankingPayments\OnlineBanking
  *
- * @method Payout setBankAccountName($value) Set Customer’s bank account name
- * @method Payout setBankAccountNumber($value) Set Customer’s bank account number
- * @method Payout setBankName($value) Set Customer’s bank name
- * @method Payout setBankCode($value) Set Customer’s bank code
- * @method Payout setBankBranch($value) Set Customer’s bank branch
  */
-class Payout extends \Genesis\API\Request\Base\Financial
+class Payin extends \Genesis\API\Request\Base\Financial
 {
-    use AddressInfoAttributes, AsyncAttributes, PaymentAttributes;
-
-    /**
-     * Customer’s bank account name
-     *
-     * @var string
-     */
-    protected $bank_account_name;
-
-    /**
-     * Customer’s bank account number
-     *
-     * @var string
-     */
-    protected $bank_account_number;
-
-    /**
-     * Customer’s bank name
-     *
-     * @var string
-     */
-    protected $bank_name;
+    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes;
 
     /**
      * Customer’s bank ode
@@ -74,19 +47,12 @@ class Payout extends \Genesis\API\Request\Base\Financial
     protected $bank_code;
 
     /**
-     * Customer’s bank branch
-     *
-     * @var string
-     */
-    protected $bank_branch;
-
-    /**
      * Returns the Request transaction type
      * @return string
      */
     protected function getTransactionType()
     {
-        return \Genesis\API\Constants\Transaction\Types::PAYSEC_PAYOUT;
+        return \Genesis\API\Constants\Transaction\Types::ONLINE_BANKING_PAYIN;
     }
 
     /**
@@ -98,24 +64,19 @@ class Payout extends \Genesis\API\Request\Base\Financial
     {
         $requiredFields = [
             'transaction_id',
-            'amount',
-            'currency',
+            'remote_ip',
             'return_success_url',
             'return_failure_url',
-            'remote_ip',
-            'bank_account_name',
-            'bank_account_number',
-            'billing_first_name',
-            'billing_last_name',
-            'billing_state',
-            'billing_country'
+            'amount',
+            'currency',
+            'bank_code'
         ];
 
         $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
 
         $requiredFieldValues = [
             'currency' => [
-                'CNY', 'THB', 'IDR'
+                'CNY', 'THB', 'IDR', 'MYR', 'INR'
             ]
         ];
 
@@ -132,10 +93,9 @@ class Payout extends \Genesis\API\Request\Base\Financial
     protected function setRequiredFieldsConditional()
     {
         $requiredFieldsConditional = [
-            'currency' => [
-                'IDR' => ['bank_code'],
-                'CNY' => ['bank_branch', 'bank_name'],
-                'THB' => ['bank_name']
+            'billing_country' => [
+                'US' => ['billing_state'],
+                'CA' => ['billing_state']
             ]
         ];
 
@@ -145,8 +105,29 @@ class Payout extends \Genesis\API\Request\Base\Financial
             'currency' => [
                 'CNY' => [
                     [
-                        'bank_account_number' => new RegexValidator('/^[0-9]{19}$/')
+                        'bank_code' => ['CITIC', 'GDB', 'PSBC', 'BOC', 'ABC', 'CEB', 'CCB', 'ICBC', 'CMBC', 'QUICKPAY']
                     ]
+                ],
+                'THB' => [
+                    [
+                        'bank_code' => ['SCB_THB', 'KTB_THB', 'BAY_THB', 'UOB_THB', 'KKB_THB', 'BBL_THB']
+                    ]
+                ],
+                'MYR' => [
+                    [
+                        'bank_code' => ['CIMB_MYR', 'PBE_MYR', 'RHB_MYR', 'HLE_MYR', 'MAY_MYR']
+                    ]
+                ],
+                'IDR' => [
+                    [
+                        'bank_code' => [
+                            'MDR_IDR', 'BNI_IDR', 'BCA_IDR', 'BRI_IDR',
+                            'PMB_IDR', 'CIMB_IDR', 'DMN_IDR', 'BTN_IDR', 'VA'
+                        ]
+                    ]
+                ],
+                'INR' => [
+                    'bank_code' => ['NB', 'UI']
                 ]
             ]
         ];
@@ -161,19 +142,15 @@ class Payout extends \Genesis\API\Request\Base\Financial
     protected function getPaymentTransactionStructure()
     {
         return [
-            'amount'              => $this->transformAmount($this->amount, $this->currency),
-            'currency'            => $this->currency,
-            'customer_email'      => $this->customer_email,
-            'customer_phone'      => $this->customer_phone,
-            'return_success_url'  => $this->return_success_url,
-            'return_failure_url'  => $this->return_failure_url,
-            'bank_code'           => $this->bank_code,
-            'bank_name'           => $this->bank_name,
-            'bank_branch'         => $this->bank_branch,
-            'bank_account_name'   => $this->bank_account_name,
-            'bank_account_number' => $this->bank_account_number,
-            'billing_address'     => $this->getBillingAddressParamsStructure(),
-            'shipping_address'    => $this->getShippingAddressParamsStructure()
+            'amount'               => $this->transformAmount($this->amount, $this->currency),
+            'currency'             => $this->currency,
+            'bank_code'            => $this->bank_code,
+            'return_success_url'   => $this->return_success_url,
+            'return_failure_url'   => $this->return_failure_url,
+            'customer_email'       => $this->customer_email,
+            'customer_phone'       => $this->customer_phone,
+            'billing_address'      => $this->getBillingAddressParamsStructure(),
+            'shipping_address'     => $this->getShippingAddressParamsStructure()
         ];
     }
 }

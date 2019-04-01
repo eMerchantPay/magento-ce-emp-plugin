@@ -21,23 +21,27 @@
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
 
-namespace Genesis\API\Request\Financial\OnlineBankingPayments\PaySec;
+namespace Genesis\API\Request\Financial\OnlineBankingPayments;
 
 use Genesis\API\Traits\Request\AddressInfoAttributes;
 use Genesis\API\Traits\Request\Financial\AsyncAttributes;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
+use Genesis\API\Traits\Request\Financial\PproAttributes;
 
 /**
- * Class Payin
+ * Class BancoDoBrasil
  *
- * PaySec Payin - oBeP-style alternative payment method
+ * BancoDoBrasil - oBeP-style alternative payment method
  *
- * @package Genesis\API\Request\Financial\OnlineBankingPayments\PaySec
+ * @package Genesis\API\Request\Financial\OnlineBankingPayments
  *
+ * @method string getConsumerReference()
+ * @method string getNationalId()
+ * @method string getBirthDate()
  */
-class Payin extends \Genesis\API\Request\Base\Financial
+class BancoDoBrasil extends \Genesis\API\Request\Base\Financial
 {
-    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes;
+    use AsyncAttributes, PaymentAttributes, AddressInfoAttributes, PproAttributes;
 
     /**
      * Returns the Request transaction type
@@ -45,7 +49,7 @@ class Payin extends \Genesis\API\Request\Base\Financial
      */
     protected function getTransactionType()
     {
-        return \Genesis\API\Constants\Transaction\Types::PAYSEC_PAYIN;
+        return \Genesis\API\Constants\Transaction\Types::BANCO_DO_BRASIL;
     }
 
     /**
@@ -57,41 +61,23 @@ class Payin extends \Genesis\API\Request\Base\Financial
     {
         $requiredFields = [
             'transaction_id',
-            'remote_ip',
             'return_success_url',
             'return_failure_url',
             'amount',
-            'currency'
+            'currency',
+            'consumer_reference',
+            'national_id',
+            'customer_email',
+            'billing_country'
         ];
 
         $this->requiredFields = \Genesis\Utils\Common::createArrayObject($requiredFields);
 
         $requiredFieldValues = [
-            'currency' => [
-                'CNY', 'THB', 'IDR'
-            ]
+            'billing_country' => [ 'BR' ]
         ];
 
         $this->requiredFieldValues = \Genesis\Utils\Common::createArrayObject($requiredFieldValues);
-
-        $this->setRequiredFieldsConditional();
-    }
-
-    /**
-     * Set the required fields conditional
-     *
-     * @return void
-     */
-    protected function setRequiredFieldsConditional()
-    {
-        $requiredFieldsConditional = [
-            'billing_country' => [
-                'US' => ['billing_state'],
-                'CA' => ['billing_state']
-            ]
-        ];
-
-        $this->requiredFieldsConditional = \Genesis\Utils\Common::createArrayObject($requiredFieldsConditional);
     }
 
     /**
@@ -101,14 +87,18 @@ class Payin extends \Genesis\API\Request\Base\Financial
     protected function getPaymentTransactionStructure()
     {
         return [
-            'amount'               => $this->transformAmount($this->amount, $this->currency),
-            'currency'             => $this->currency,
-            'return_success_url'   => $this->return_success_url,
-            'return_failure_url'   => $this->return_failure_url,
-            'customer_email'       => $this->customer_email,
-            'customer_phone'       => $this->customer_phone,
-            'billing_address'      => $this->getBillingAddressParamsStructure(),
-            'shipping_address'     => $this->getShippingAddressParamsStructure()
+            'usage'              => $this->usage,
+            'remote_ip'          => $this->remote_ip,
+            'return_success_url' => $this->return_success_url,
+            'return_failure_url' => $this->return_failure_url,
+            'amount'             => $this->transformAmount($this->amount, $this->currency),
+            'currency'           => $this->currency,
+            'consumer_reference' => $this->consumer_reference,
+            'national_id'        => $this->national_id,
+            'birth_date'         => $this->birth_date,
+            'customer_email'     => $this->customer_email,
+            'billing_address'    => $this->getBillingAddressParamsStructure(),
+            'shipping_address'   => $this->getShippingAddressParamsStructure()
         ];
     }
 }

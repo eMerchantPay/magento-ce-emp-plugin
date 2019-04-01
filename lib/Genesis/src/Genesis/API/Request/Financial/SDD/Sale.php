@@ -25,7 +25,7 @@ namespace Genesis\API\Request\Financial\SDD;
 
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
 use Genesis\API\Traits\Request\AddressInfoAttributes;
-use Genesis\API\Traits\Request\Financial\SddBankAttributes;
+use Genesis\API\Traits\Request\Financial\BankAttributes;
 
 /**
  * Class Sale
@@ -36,7 +36,7 @@ use Genesis\API\Traits\Request\Financial\SddBankAttributes;
  */
 class Sale extends \Genesis\API\Request\Base\Financial
 {
-    use PaymentAttributes, AddressInfoAttributes, SddBankAttributes;
+    use PaymentAttributes, AddressInfoAttributes, BankAttributes;
 
     /**
      * Returns the Request transaction type

@@ -78,8 +78,8 @@ class Sale extends \Genesis\API\Request\Base\Financial
 
         $requiredFieldValues = [
             'billing_country' => [
-                'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU',
-                'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'
+                'AT', 'BE', 'BG', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'GB', 'GR', 'HR', 'HU',
+                'IE', 'IT', 'LT', 'LV', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'
             ],
             'currency'        => \Genesis\Utils\Currency::getList()
         ];

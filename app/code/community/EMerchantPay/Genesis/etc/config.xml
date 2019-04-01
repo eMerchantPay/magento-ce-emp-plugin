@@ -19,7 +19,7 @@ GNU General Public License for more details.
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.5.1</version>
+         <version>1.5.2</version>
        </EMerchantPay_Genesis>
     </modules>
 
@@ -66,6 +66,28 @@ GNU General Public License for more details.
                 </observers>
             </sales_quote_address_collect_totals_before>
         </events>
+
+        <resources>
+            <EMerchantPay_Genesis_setup>
+                <setup>
+                    <module>EMerchantPay_Genesis</module>
+                    <class>EMerchantPay_Genesis_Model_Resource_Setup</class>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </EMerchantPay_Genesis_setup>
+            <EMerchantPay_Genesis_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </EMerchantPay_Genesis_write>
+            <EMerchantPay_Genesis_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </EMerchantPay_Genesis_read>
+        </resources>
         
     </global>
 

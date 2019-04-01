@@ -27,7 +27,15 @@ class EMerchantPay_Genesis_Model_Checkout
 {
     protected $_code = 'emerchantpay_checkout';
 
-    const LOG_FILE_NAME = "emerchantpay_genesis.log";
+    /**
+     * Value has to be the same as XML tag in system.xml
+     */
+    const TOKENIZATION_ENABLED_CONFIG_KEY = 'tokenization_enabled';
+    const LOG_FILE_NAME                   = 'emerchantpay_genesis.log';
+    /**
+     * Value has to be the same as defined in setup class EMerchantPay_Genesis_Model_Resource_Setup
+     */
+    const CONSUMER_ID_DATA_KEY            = 'consumer_id';
 
     protected $_formBlockType = 'emerchantpay/form_checkout';
     protected $_infoBlockType = 'emerchantpay/info_checkout';
@@ -120,7 +128,27 @@ class EMerchantPay_Genesis_Model_Checkout
 
             $this->addTransactionTypesToGatewayRequest($genesis, $orderItemsList);
 
+            if ($this->isTokenizationEnabled()) {
+                if (!$this->getHelper()->getCustomerSession()->isLoggedIn()) {
+                    throw new LogicException(
+                        $this->getHelper()->__('You cannot finish the payment as a guest, please login / register.')
+                    );
+                }
+
+                $genesis->request()->setRememberCard(true);
+
+                $customer = $this->getCustomerFromOrder($order);
+                $consumerId = $this->getConsumerIdFromCustomer($customer);
+                if ($consumerId) {
+                    $genesis->request()->setConsumerId($consumerId);
+                }
+            }
+
             $genesis->execute();
+
+            if ($this->isTokenizationEnabled() && !empty($genesis->response()->getResponseObject()->consumer_id)) {
+                $this->setConsumerIdForCustomer($customer, $genesis->response()->getResponseObject()->consumer_id);
+            }
 
             $payment
                 ->setTransactionId(
@@ -146,6 +174,49 @@ class EMerchantPay_Genesis_Model_Checkout
         }
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isTokenizationEnabled()
+    {
+        return $this->getHelper()->getConfigBoolValue(
+            $this->_code,
+            self::TOKENIZATION_ENABLED_CONFIG_KEY
+        );
+    }
+
+    /**
+     * @param Mage_Sales_Model_Order $order
+     *
+     * @return Mage_Core_Model_Abstract
+     */
+    protected function getCustomerFromOrder(Mage_Sales_Model_Order $order)
+    {
+        return Mage::getModel('customer/customer')->load($order->getCustomerId());
+    }
+
+    /**
+     * @param Mage_Core_Model_Abstract $customer
+     *
+     * @return string
+     */
+    protected function getConsumerIdFromCustomer(Mage_Core_Model_Abstract $customer)
+    {
+        return $customer->getData(self::CONSUMER_ID_DATA_KEY);
+    }
+
+    /**
+     * @param Mage_Core_Model_Abstract $customer
+     * @param string $consumerId
+     *
+     * @throws Exception
+     */
+    protected function setConsumerIdForCustomer(Mage_Core_Model_Abstract $customer, $consumerId)
+    {
+        $customer->setData(self::CONSUMER_ID_DATA_KEY, $consumerId);
+        $customer->save();
     }
 
     /**
@@ -864,8 +935,6 @@ class EMerchantPay_Genesis_Model_Checkout
             \Genesis\API\Constants\Payment\Methods::QIWI =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::SAFETY_PAY =>
-                \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Payment\Methods::TELEINGRESO =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,
             \Genesis\API\Constants\Payment\Methods::TRUST_PAY =>
                 \Genesis\API\Constants\Transaction\Types::PPRO,

@@ -106,14 +106,47 @@ class Genesis
                 $parts[$lastIndex] = 'Cancel';
                 break;
             case 'AVS':
-                throw new \Genesis\Exceptions\DeprecatedMethod(
-                    'The selected transaction type is deprecated!'
-                );
+            case 'INPay':
+            case 'ABNiDEAL':
+                $this->throwDeprecatedTransactionType();
+                break;
+            case 'Payin':
+            case 'Payout':
+                if ($this->getParentClass($parts, $lastIndex) === 'Citadel') {
+                    $this->throwDeprecatedTransactionType();
+                }
+                break;
+            case 'oBeP':
+                if ($this->getParentClass($parts, $lastIndex) === 'PayByVouchers') {
+                    $this->throwDeprecatedTransactionType();
+                }
+                break;
         }
 
         return sprintf(
             '\Genesis\API\Request\%s',
             implode('\\', $parts)
+        );
+    }
+
+    /**
+     * @param array $classParts
+     * @param int $lastIndex Index of the last element in the array
+     *
+     * @return string Returns empty string, if there is no parent class
+     */
+    protected function getParentClass($classParts, $lastIndex)
+    {
+        return isset($classParts[$lastIndex - 1]) ? $classParts[$lastIndex - 1] : '';
+    }
+
+    /**
+     * @throws \Genesis\Exceptions\DeprecatedMethod
+     */
+    protected function throwDeprecatedTransactionType()
+    {
+        throw new \Genesis\Exceptions\DeprecatedMethod(
+            'The selected transaction type is deprecated!'
         );
     }
 
