@@ -19,7 +19,7 @@ GNU General Public License for more details.
 <config>
     <modules>
        <EMerchantPay_Genesis>
-         <version>1.5.2</version>
+         <version>1.5.3</version>
        </EMerchantPay_Genesis>
     </modules>
 
@@ -65,6 +65,14 @@ GNU General Public License for more details.
                     </EMerchantPay_Genesis>
                 </observers>
             </sales_quote_address_collect_totals_before>
+            <customer_save_before>
+                <observers>
+                    <EMerchantPay_Genesis>
+                        <class>EMerchantPay_Genesis_Observer_CustomerSaveBefore</class>
+                        <method>handleAction</method>
+                    </EMerchantPay_Genesis>
+                </observers>
+            </customer_save_before>
         </events>
 
         <resources>

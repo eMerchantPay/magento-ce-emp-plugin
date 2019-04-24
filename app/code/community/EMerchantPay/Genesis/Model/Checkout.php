@@ -139,6 +139,11 @@ class EMerchantPay_Genesis_Model_Checkout
 
                 $customer = $this->getCustomerFromOrder($order);
                 $consumerId = $this->getConsumerIdFromCustomer($customer);
+
+                if (empty($consumerId)) {
+                    $consumerId = $this->retrieveConsumerIdFromEmail($order->getCustomerEmail());
+                }
+
                 if ($consumerId) {
                     $genesis->request()->setConsumerId($consumerId);
                 }
@@ -146,7 +151,7 @@ class EMerchantPay_Genesis_Model_Checkout
 
             $genesis->execute();
 
-            if ($this->isTokenizationEnabled() && !empty($genesis->response()->getResponseObject()->consumer_id)) {
+            if (!empty($genesis->response()->getResponseObject()->consumer_id)) {
                 $this->setConsumerIdForCustomer($customer, $genesis->response()->getResponseObject()->consumer_id);
             }
 
@@ -217,6 +222,43 @@ class EMerchantPay_Genesis_Model_Checkout
     {
         $customer->setData(self::CONSUMER_ID_DATA_KEY, $consumerId);
         $customer->save();
+    }
+
+    /**
+     * @param string $email
+     *
+     * @return null|int
+     */
+    protected function retrieveConsumerIdFromEmail($email)
+    {
+        try {
+            $genesis = new \Genesis\Genesis('NonFinancial\Consumers\Retrieve');
+            $genesis->request()->setEmail($email);
+
+            $genesis->execute();
+
+            $response = $genesis->response()->getResponseObject();
+
+            if ($this->isErrorResponse($response)) {
+                return null;
+            }
+
+            return $response->consumer_id;
+        } catch (\Exception $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * @param $response
+     *
+     * @return bool
+     */
+    protected function isErrorResponse($response)
+    {
+        $state = new \Genesis\API\Constants\Transaction\States($response->status);
+
+        return $state->isError();
     }
 
     /**
