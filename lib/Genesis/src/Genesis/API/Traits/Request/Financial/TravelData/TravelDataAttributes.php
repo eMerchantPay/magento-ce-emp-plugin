@@ -20,57 +20,27 @@
  *
  * @license     http://opensource.org/licenses/MIT The MIT License
  */
-namespace Genesis\Interfaces;
+
+namespace Genesis\API\Traits\Request\Financial\TravelData;
+
+use Genesis\API\Traits\RestrictedSetter;
 
 /**
- * An interface for every network abstraction (cURL, Stream etc.).
- *
- * @package    Genesis
- * @subpackage Network
+ * Trait TravelDataAttributes
+ * @package Genesis\API\Traits\Request\Financial\TravelData
  */
-interface Network
+trait TravelDataAttributes
 {
-    /**
-     * Get HTTP Status code
-     *
-     * @return mixed
-     */
-    public function getStatus();
+    use RestrictedSetter, AirlineItineraryAttributes, CarRentalAttributes,
+        HotelRentalAttributes, AncillaryChargesAttributes;
 
-    /**
-     * Get the full response (headers/body)
-     *
-     * @return mixed
-     */
-    public function getResponse();
-
-    /**
-     * Get response headers
-     *
-     * @return mixed
-     */
-    public function getResponseHeaders();
-
-    /**
-     * Get response body
-     *
-     * @return mixed
-     */
-    public function getResponseBody();
-
-    /**
-     * Set the request parameters
-     *
-     * @param $requestData
-     *
-     * @return mixed
-     */
-    public function prepareRequestBody($requestData);
-
-    /**
-     * Execute pre-set request
-     *
-     * @return mixed
-     */
-    public function execute();
+    public function getTravelData()
+    {
+        return array_merge(
+            $this->getAirlineItineraryStructure(),
+            $this->getCarRentalStructure(),
+            $this->getHotelRentalStructure(),
+            $this->getAncillaryChargesStructure()
+        );
+    }
 }

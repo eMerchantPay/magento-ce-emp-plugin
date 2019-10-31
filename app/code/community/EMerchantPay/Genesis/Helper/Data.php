@@ -938,22 +938,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      */
     public function getIsRefundable(Varien_Object $payment)
     {
-        $refundableGatewayTransactionTypes = array(
-            \Genesis\API\Constants\Transaction\Types::SALE,
-            \Genesis\API\Constants\Transaction\Types::SALE_3D,
-            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE,
-            \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D,
-            \Genesis\API\Constants\Transaction\Types::CASHU,
-            \Genesis\API\Constants\Transaction\Types::PPRO,
-            \Genesis\API\Constants\Transaction\Types::INPAY,
-            \Genesis\API\Constants\Transaction\Types::P24,
-            \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS,
-            \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE
-        );
-
-        return in_array(
-            $this->getGenesisPaymentTransactionType($payment),
-            $refundableGatewayTransactionTypes
+        return \Genesis\API\Constants\Transaction\Types::canRefund(
+            $this->getGenesisPaymentTransactionType($payment)
         );
     }
 

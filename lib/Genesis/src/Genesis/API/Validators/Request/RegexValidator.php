@@ -46,9 +46,25 @@ class RegexValidator extends \Genesis\API\Validators\Request\Base\Validator
     const PATTERN_GIFT_CARD_NUMBER      = '/^\d+$/';
 
     /**
+     * Must be a 10 digits Russian valid mobile number(either with or without international prefix +7),
+     * or International mobile phone number, starting with + followed by at least 9 digits.
+     */
+    const PATTERN_QIWI_PHONE_NUMBER = '/^(\d{10}|\+7\d{10}|\+\d{9,30})$/';
+
+    /**
      * Vouchers Regex Validation Patterns
      */
     const PATTERN_NEOSURF_VOUCHER_NUMBER = '/^[A-Za-z0-9]{1,10}$/';
+
+    /**
+     * DE IBAN validation. Used in PPRO GiroPay
+     */
+    const PATTERN_DE_IBAN = '/DE[0-9]{20}/';
+
+    /**
+     * Numeric value - 4 digits only; It cannot start with 0;
+     */
+    const PATTERN_KYC_CALL_SECURITY_CODE = '/^[1-9][0-9]{3}$/';
 
     /**
      * Regex expression

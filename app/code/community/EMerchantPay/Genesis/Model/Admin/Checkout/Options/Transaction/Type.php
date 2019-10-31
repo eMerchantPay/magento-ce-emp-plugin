@@ -66,71 +66,133 @@ class EMerchantPay_Genesis_Model_Admin_Checkout_Options_Transaction_Type
     {
         return array(
             \Genesis\API\Constants\Transaction\Types::ABNIDEAL             =>
-                Mage::helper('emerchantpay')->__('ABN iDEAL'),
+                $this->getLanguageEntry('ABN iDEAL'),
             \Genesis\API\Constants\Transaction\Types::ALIPAY               =>
-                Mage::helper('emerchantpay')->__('Alipay'),
+                $this->getLanguageEntry('Alipay'),
+            \Genesis\API\Constants\Transaction\Types::AURA                 =>
+                $this->getLanguageEntry('Aura'),
             \Genesis\API\Constants\Transaction\Types::AUTHORIZE            =>
-                Mage::helper('emerchantpay')->__('Authorize'),
+                $this->getLanguageEntry('Authorize'),
             \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D         =>
-                Mage::helper('emerchantpay')->__('Authorize (3D-Secure)'),
-            \Genesis\API\Constants\Transaction\Types::CASHU                =>
-                Mage::helper('emerchantpay')->__('CashU'),
-            \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN        =>
-                Mage::helper('emerchantpay')->__('Citadel'),
-            \Genesis\API\Constants\Payment\Methods::EPS                    =>
-                Mage::helper('emerchantpay')->__('eps'),
-            \Genesis\API\Constants\Transaction\Types::EZEEWALLET           =>
-                Mage::helper('emerchantpay')->__('eZeeWallet'),
-            \Genesis\API\Constants\Payment\Methods::GIRO_PAY               =>
-                Mage::helper('emerchantpay')->__('GiroPay'),
-            \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN         =>
-                Mage::helper('emerchantpay')->__('iDebit'),
-            \Genesis\API\Constants\Transaction\Types::INPAY                =>
-                Mage::helper('emerchantpay')->__('INPay'),
-            \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN    =>
-                Mage::helper('emerchantpay')->__('InstaDebit'),
+                $this->getLanguageEntry('Authorize (3D-Secure)'),
+            \Genesis\API\Constants\Transaction\Types::BALOTO               =>
+                $this->getLanguageEntry('Baloto'),
+            \Genesis\API\Constants\Transaction\Types::BANAMEX              =>
+                $this->getLanguageEntry('Banamex'),
+            \Genesis\API\Constants\Transaction\Types::BANCO_DE_OCCIDENTE   =>
+                $this->getLanguageEntry('Banco de Occidente'),
+            \Genesis\API\Constants\Transaction\Types::BANCO_DO_BRASIL      =>
+                $this->getLanguageEntry('Banco do Brasil'),
+            \Genesis\API\Constants\Transaction\Types::BANCOMER             =>
+                $this->getLanguageEntry('Bancomer'),
             \Genesis\API\Constants\Payment\Methods::BCMC                   =>
-                Mage::helper('emerchantpay')->__('Mr.Cash'),
+                $this->getLanguageEntry('Mr.Cash'),
+            \Genesis\API\Constants\Transaction\Types::BITPAY_SALE          =>
+                $this->getLanguageEntry('BitPay'),
+            \Genesis\API\Constants\Transaction\Types::BOLETO               =>
+                $this->getLanguageEntry('Boleto'),
+            \Genesis\API\Constants\Transaction\Types::BRADESCO             =>
+                $this->getLanguageEntry('Bradesco'),
+            \Genesis\API\Constants\Transaction\Types::CABAL                =>
+                $this->getLanguageEntry('Cabal'),
+            \Genesis\API\Constants\Transaction\Types::CASHU                =>
+                $this->getLanguageEntry('CashU'),
+            \Genesis\API\Constants\Transaction\Types::CENCOSUD             =>
+                $this->getLanguageEntry('Cencosud'),
+            \Genesis\API\Constants\Transaction\Types::EFECTY               =>
+                $this->getLanguageEntry('Efecty'),
+            \Genesis\API\Constants\Transaction\Types::ELO                  =>
+                $this->getLanguageEntry('Elo'),
+            \Genesis\API\Constants\Transaction\Types::ENTERCASH            =>
+                $this->getLanguageEntry('Entercash'),
+            \Genesis\API\Constants\Payment\Methods::EPS                    =>
+                $this->getLanguageEntry('eps'),
+            \Genesis\API\Constants\Transaction\Types::EZEEWALLET           =>
+                $this->getLanguageEntry('eZeeWallet'),
+            \Genesis\API\Constants\Payment\Methods::GIRO_PAY               =>
+                $this->getLanguageEntry('GiroPay'),
+            \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN         =>
+                $this->getLanguageEntry('iDebit'),
+            \Genesis\API\Constants\Transaction\Types::INPAY                =>
+                $this->getLanguageEntry('INPay'),
+            \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN    =>
+                $this->getLanguageEntry('InstaDebit'),
+            \Genesis\API\Constants\Transaction\Types::INSTANT_TRANSFER     =>
+                $this->getLanguageEntry('Instant Transfer'),
+            \Genesis\API\Constants\Transaction\Types::ITAU                 =>
+                $this->getLanguageEntry('Itau'),
+            \Genesis\API\Constants\Transaction\Types::MULTIBANCO           =>
+                $this->getLanguageEntry('Multibanco'),
             \Genesis\API\Constants\Payment\Methods::MYBANK                 =>
-                Mage::helper('emerchantpay')->__('MyBank'),
+                $this->getLanguageEntry('MyBank'),
+            \Genesis\API\Constants\Transaction\Types::NARANJA              =>
+                $this->getLanguageEntry('Naranja'),
+            \Genesis\API\Constants\Transaction\Types::NATIVA               =>
+                $this->getLanguageEntry('Nativa'),
             \Genesis\API\Constants\Transaction\Types::NETELLER             =>
-                Mage::helper('emerchantpay')->__('Neteller'),
+                $this->getLanguageEntry('Neteller'),
             \Genesis\API\Constants\Transaction\Types::ONLINE_BANKING_PAYIN =>
-                Mage::helper('emerchantpay')->__('OnlineBanking'),
+                $this->getLanguageEntry('OnlineBanking'),
+            \Genesis\API\Constants\Transaction\Types::OXXO                 =>
+                $this->getLanguageEntry('OXXO'),
             \Genesis\API\Constants\Transaction\Types::P24                  =>
-                Mage::helper('emerchantpay')->__('P24'),
+                $this->getLanguageEntry('P24'),
+            \Genesis\API\Constants\Transaction\Types::PAGO_FACIL           =>
+                $this->getLanguageEntry('Pago Facil'),
             \Genesis\API\Constants\Transaction\Types::PAYSAFECARD          =>
-                Mage::helper('emerchantpay')->__('PaySafeCard'),
+                $this->getLanguageEntry('PaySafeCard'),
             \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_SALE    =>
-                Mage::helper('emerchantpay')->__('PayByVoucher (Sale)'),
-            \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY  =>
-                Mage::helper('emerchantpay')->__('PayByVoucher (oBeP)'),
+                $this->getLanguageEntry('PayByVoucher (Sale)'),
             \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS       =>
-                Mage::helper('emerchantpay')->__('PayPal Express'),
+                $this->getLanguageEntry('PayPal Express'),
+            \Genesis\API\Constants\Transaction\Types::PAYU                 =>
+                $this->getLanguageEntry('PayU'),
             \Genesis\API\Constants\Transaction\Types::POLI                 =>
-                Mage::helper('emerchantpay')->__('POLi'),
+                $this->getLanguageEntry('POLi'),
             \Genesis\API\Constants\Payment\Methods::PRZELEWY24             =>
-                Mage::helper('emerchantpay')->__('Przelewy24'),
+                $this->getLanguageEntry('Przelewy24'),
             \Genesis\API\Constants\Payment\Methods::QIWI                   =>
-                Mage::helper('emerchantpay')->__('Qiwi'),
+                $this->getLanguageEntry('Qiwi'),
+            \Genesis\API\Constants\Transaction\Types::RAPI_PAGO            =>
+                $this->getLanguageEntry('RapiPago'),
+            \Genesis\API\Constants\Transaction\Types::REDPAGOS             =>
+                $this->getLanguageEntry('Redpagos'),
             \Genesis\API\Constants\Payment\Methods::SAFETY_PAY             =>
-                Mage::helper('emerchantpay')->__('SafetyPay'),
+                $this->getLanguageEntry('SafetyPay'),
             \Genesis\API\Constants\Transaction\Types::SALE                 =>
-                Mage::helper('emerchantpay')->__('Sale'),
+                $this->getLanguageEntry('Sale'),
             \Genesis\API\Constants\Transaction\Types::SALE_3D              =>
-                Mage::helper('emerchantpay')->__('Sale (3D-Secure)'),
+                $this->getLanguageEntry('Sale (3D-Secure)'),
+            \Genesis\API\Constants\Transaction\Types::SANTANDER            =>
+                $this->getLanguageEntry('Santander'),
+            \Genesis\API\Constants\Transaction\Types::SANTANDER_CASH       =>
+                $this->getLanguageEntry('Santander Cash'),
             \Genesis\API\Constants\Transaction\Types::SDD_SALE             =>
-                Mage::helper('emerchantpay')->__('Sepa Direct Debit'),
+                $this->getLanguageEntry('Sepa Direct Debit'),
             \Genesis\API\Constants\Transaction\Types::SOFORT               =>
-                Mage::helper('emerchantpay')->__('SOFORT'),
+                $this->getLanguageEntry('SOFORT'),
+            \Genesis\API\Constants\Transaction\Types::TARJETA_SHOPPING     =>
+                $this->getLanguageEntry('Tarjeta Shopping'),
             \Genesis\API\Constants\Transaction\Types::TRUSTLY_SALE         =>
-                Mage::helper('emerchantpay')->__('Trustly'),
+                $this->getLanguageEntry('Trustly'),
             \Genesis\API\Constants\Payment\Methods::TRUST_PAY              =>
-                Mage::helper('emerchantpay')->__('TrustPay'),
+                $this->getLanguageEntry('TrustPay'),
             \Genesis\API\Constants\Transaction\Types::WEBMONEY             =>
-                Mage::helper('emerchantpay')->__('WebMoney'),
+                $this->getLanguageEntry('WebMoney'),
             \Genesis\API\Constants\Transaction\Types::WECHAT               =>
-                Mage::helper('emerchantpay')->__('WeChat'),
+                $this->getLanguageEntry('WeChat'),
+            \Genesis\API\Constants\Transaction\Types::ZIMPLER              =>
+                $this->getLanguageEntry('Zimpler'),
         );
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return string
+     */
+    protected function getLanguageEntry($key)
+    {
+        return Mage::helper('emerchantpay')->__($key);
     }
 }

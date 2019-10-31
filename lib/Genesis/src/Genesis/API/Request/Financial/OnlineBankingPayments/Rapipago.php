@@ -24,14 +24,14 @@
 namespace Genesis\API\Request\Financial\OnlineBankingPayments;
 
 /**
- * Class Rapipago
+ * Class RapiPago
  *
- * Rapipago from Argentina is an offline payment method used for online purchases.
- * Shoppers buy their goods and services online and pay offline at one of the 6,000+ Rapipago payment locations.
+ * RapiPago from Argentina is an offline payment method used for online purchases.
+ * Shoppers buy their goods and services online and pay offline at one of the 6,000+ RapiPago payment locations.
  *
  * @package Genesis\API\Request\Financial\OnlineBankingPayments
  */
-class Rapipago extends \Genesis\API\Request\Base\Financial\SouthAmericanPayment
+class RapiPago extends \Genesis\API\Request\Base\Financial\SouthAmericanPayment
 {
     /**
      * Returns the Request transaction type
@@ -39,7 +39,7 @@ class Rapipago extends \Genesis\API\Request\Base\Financial\SouthAmericanPayment
      */
     protected function getTransactionType()
     {
-        return \Genesis\API\Constants\Transaction\Types::RAPIPAGO;
+        return \Genesis\API\Constants\Transaction\Types::RAPI_PAGO;
     }
 
     /**

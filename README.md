@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
-* [GenesisPHP v1.14.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.14.0) - (Integrated in Module)
+* [GenesisPHP v1.17.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.17.0) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work
@@ -27,24 +27,21 @@ GenesisPHP Requirements
     * [XMLReader](https://php.net/xmlreader)
     * [XMLWriter](https://php.net/xmlwriter)
 
-Installation (via Magento Connect)
----------------------
-
-* Navigate to our extention at Magento Connect - [emerchantpay Payment Gateway - Magento Connect]
-* Click ```Install Now``` and get the ```Extension Key```
-* Login inside the Admin Panel and go to ```System``` -> ```Magento Connect``` -> ```Magento Connect Manager```
-* Paste the ```Extension Key``` and Click ```Install```
-* Wait until the ```Extension``` is downloaded and checked then click on the button ```Proceed``` to start the Installation
-
 Installation (via Modman)
 ---------------------
 
 * Install [ModMan]
 * Navigate to the root of your Magento installation
 * run ```modman init```
-* and clone this repo ```modman clone https://github.com/eMerchantPay/magento-ce-emp-plugin```
+* and clone this repo ```modman clone --copy https://github.com/eMerchantPay/magento-ce-emp-plugin```
 * Login inside the Admin Panel and go to ```System``` -> ```Configuration``` -> ```Payment Methods```
+* If one of the Payment Methods ```emerchantpay Direct``` or ```emerchantpay Checkout``` is not yet available, 
+  go to  ```System``` -> ```Cache Management``` and clear Magento Cache by clicking on ```Flush Magento Cache``` 
 * Check ```Enable```, set the correct credentials, select your prefered payment method and click ```Save config```
+
+Update emerchantpay extension via Modman
+* Navigate to the root of your Magento installation
+* run ```modman update --force magento-ce-emp-plugin```
 
 Installation (manual)
 ---------------------
@@ -79,43 +76,77 @@ Supported Transactions
 	* __Sale (3D-Secure)__
 
 * ```emerchantpay Checkout``` Payment Method
-    * __ABN iDEAL__
-    * __Alipay__
+  * __Alternative Payment Methods__
+    * __P24__
+    * __POLi__
+    * __PPRO__
+      * __eps__
+      * __GiroPay__
+      * __Mr.Cash__
+      * __MyBank__
+      * __Przelewy24__
+      * __Qiwi__
+      * __SafetyPay__
+      * __TrustPay__
+    * __SOFORT__
+    * __Trustly Sale__
+    * __PayPal Express__
+  * __Credit Cards__
+    * __Aura__
     * __Authorize__
     * __Authorize (3D-Secure)__
-    * __CashU__
-    * __Citadel Payin__
-    * __eZeeWallet__
+    * __Cabal__
+    * __Cencosud__
+    * __Elo__
+    * __Naranja__
+    * __Nativa__
+    * __Sale__
+    * __Sale (3D-Secure)__
+    * __Tarjeta Shopping__
+    * __Recurring__
+      * __InitRecurringSale__
+      * __InitRecurringSale (3D-Secure)__
+      * __RecurringSale__
+  * __Cash Payments__
+    * __Baloto__
+    * __Banamex__
+    * __Banco de Occidente__
+    * __Boleto__
+    * __Efecty__
+    * __OXXO__
+    * __Pago Facil__
+    * __Redpagos__
+    * __Santander Cash__
+  * __Crypto__
+    * __BitPay__
+  * __Sepa Direct Debit__
+    * __SDD Sale__
+  * __Online Banking Payments__
+    * __Alipay__
+    * __Banco do Brasil__
+    * __Bancomer__
+    * __Bradesco__
+    * __Entercash__
     * __iDebit Payin__
     * __INPay__
     * __InstaDebit Payin__
-    * __InitRecurringSale__
-	* __InitRecurringSale (3D-Secure)__
-    * __Neteller__
+    * __InstantTransfer__
+    * __Itau__
+    * __Multibanco__
     * __OnlineBanking__
-    * __P24__
-    * __PayPal Express__
-    * __PaySafeCard__
-    * __PayByVoucher (Sale)__
-    * __PayByVoucher (oBeP)__
-    * __POLi__
-    * __PPRO__
-    	* __eps__
-    	* __GiroPay__
-    	* __Mr.Cash__
-    	* __MyBank__
-    	* __Przelewy24__
-    	* __Qiwi__
-    	* __SafetyPay__
-    	* __TrustPay__
-    * __RecurringSale__
-    * __Sale__
-    * __Sale (3D-Secure)__
-    * __SDD Sale__
-    * __SOFORT__
-    * __Trustly Sale__
-    * __WebMoney__
+    * __PayU__
+    * __RapiPago__
+    * __Santander__
     * __WeChat__
+  * __Vouchers__
+    * __CashU__
+    * __PayByVoucher (Sale)__
+    * __PaySafeCard__
+  * __Electronic Wallets__
+    * __eZeeWallet__
+    * __Neteller__
+    * __WebMoney__
+    * __Zimpler__
 
 _Note_: If you have trouble with your credentials or terminal configuration, get in touch with our [support] team
 

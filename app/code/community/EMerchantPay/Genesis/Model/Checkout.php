@@ -291,21 +291,6 @@ class EMerchantPay_Genesis_Model_Checkout
                             \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT
                     );
                     break;
-                case \Genesis\API\Constants\Transaction\Types::PAYBYVOUCHER_YEEPAY:
-                    $parameters = array(
-                        'card_type'        =>
-                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\CardTypes::VIRTUAL,
-                        'redeem_type'      =>
-                            \Genesis\API\Constants\Transaction\Parameters\PayByVouchers\RedeemTypes::INSTANT,
-                        'product_name'     => $orderItemsList,
-                        'product_category' => $orderItemsList
-                    );
-                    break;
-                case \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN:
-                    $parameters = array(
-                        'merchant_customer_id' => $this->getHelper()->getCurrentUserIdHash()
-                    );
-                    break;
                 case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
                 case \Genesis\API\Constants\Transaction\Types::INSTA_DEBIT_PAYIN:
                     $parameters = array(
@@ -459,7 +444,11 @@ class EMerchantPay_Genesis_Model_Checkout
 
             $referenceId = $capture->getTxnId();
 
-            $genesis = new \Genesis\Genesis('Financial\Refund');
+            $genesis = new \Genesis\Genesis(
+                \Genesis\API\Constants\Transaction\Types::getRefundTransactionClass(
+                    $this->getHelper()->getGenesisPaymentTransactionType($capture)
+                )
+            );
 
             $genesis
                 ->request()
@@ -907,7 +896,6 @@ class EMerchantPay_Genesis_Model_Checkout
             case \Genesis\API\Constants\Transaction\Types::ABNIDEAL:
             case \Genesis\API\Constants\Transaction\Types::ALIPAY:
             case \Genesis\API\Constants\Transaction\Types::CASHU:
-            case \Genesis\API\Constants\Transaction\Types::CITADEL_PAYIN:
             case \Genesis\API\Constants\Transaction\Types::EZEEWALLET:
             case \Genesis\API\Constants\Transaction\Types::IDEBIT_PAYIN:
             case \Genesis\API\Constants\Transaction\Types::INPAY:
@@ -915,7 +903,6 @@ class EMerchantPay_Genesis_Model_Checkout
             case \Genesis\API\Constants\Transaction\Types::NETELLER:
             case \Genesis\API\Constants\Transaction\Types::P24:
             case \Genesis\API\Constants\Transaction\Types::PAYSAFECARD:
-            case \Genesis\API\Constants\Transaction\Types::PAYSEC_PAYIN:
             case \Genesis\API\Constants\Transaction\Types::PAYPAL_EXPRESS:
             case \Genesis\API\Constants\Transaction\Types::PPRO:
             case \Genesis\API\Constants\Transaction\Types::SALE:

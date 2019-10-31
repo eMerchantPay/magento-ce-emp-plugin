@@ -1,0 +1,20 @@
+#	emerchantpay Gateway Module for Magento > 1.7
+#	modman config for Automatic module deploy
+#
+# *** Instalation ***
+#
+#	Navigate to the root of your Magento installation
+#	run modman init
+#	and clone this repo modman clone --copy https://github.com/eMerchantPay/magento-ce-emp-plugin
+# *** Update ***
+#
+#   Navigate to the root of your Magento installation
+#   run modman update --force magento-ce-emp-plugin
+
+app/code/community/EMerchantPay app/code/community/EMerchantPay
+app/design/adminhtml/default/default/template/emerchantpay app/design/adminhtml/default/default/template/emerchantpay
+app/design/frontend/base/default/template/emerchantpay app/design/frontend/base/default/template/emerchantpay
+app/etc/modules/EMerchantPay_Genesis.xml app/etc/modules/EMerchantPay_Genesis.xml
+app/locale/en_GB/EMerchantPay_Genesis.csv app/locale/en_GB/EMerchantPay_Genesis.csv
+app/locale/en_US/EMerchantPay_Genesis.csv
+lib/Genesis lib/Genesis
