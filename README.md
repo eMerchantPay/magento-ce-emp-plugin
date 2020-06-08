@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
-* [GenesisPHP v1.17.0](https://github.com/GenesisGateway/genesis_php/releases/tag/1.17.0) - (Integrated in Module)
+* [GenesisPHP v1.18.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.3) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work

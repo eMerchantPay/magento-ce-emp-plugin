@@ -82,8 +82,6 @@ class Stream extends Base
             'ssl'  => [
                 // DO NOT allow self-signed certificates
                 'allow_self_signed' => false,
-                // Path to certificate/s PEM files used to validate the server authenticity
-                'cafile'            => $requestData['ca_bundle'],
                 // Validate Certificates
                 'verify_peer'       => true,
                 // Abort if the certificate-chain is longer than 5 nodes
@@ -129,9 +127,9 @@ class Stream extends Base
 
         $this->responseBody = stream_get_contents($stream);
 
-        $this->responseHeaders = $http_response_header;
+        $this->responseHeaders = implode("\r\n", $http_response_header);
 
-        $this->response = implode("\r\n", $http_response_header) . "\r\n\r\n" . $this->responseBody;
+        $this->response = $this->responseHeaders . "\r\n\r\n" . $this->responseBody;
 
         restore_error_handler();
     }

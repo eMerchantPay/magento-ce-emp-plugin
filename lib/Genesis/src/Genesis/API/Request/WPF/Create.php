@@ -22,6 +22,7 @@
  */
 namespace Genesis\API\Request\WPF;
 
+use Genesis\API\Constants\i18n;
 use Genesis\API\Constants\Transaction\Types;
 use Genesis\API\Traits\Request\Financial\PaymentAttributes;
 use Genesis\API\Traits\Request\AddressInfoAttributes;
@@ -29,8 +30,10 @@ use Genesis\API\Traits\Request\Financial\AsyncAttributes;
 use Genesis\API\Traits\Request\Financial\NotificationAttributes;
 use Genesis\API\Traits\Request\RiskAttributes;
 use Genesis\API\Traits\Request\Financial\DescriptorAttributes;
+use Genesis\API\Traits\RestrictedSetter;
 use Genesis\Exceptions\ErrorParameter;
 use Genesis\Exceptions\InvalidArgument;
+use Genesis\Utils\Common;
 use Genesis\Utils\Common as CommonUtils;
 
 /**
@@ -56,12 +59,19 @@ use Genesis\Utils\Common as CommonUtils;
 class Create extends \Genesis\API\Request
 {
     use PaymentAttributes, AddressInfoAttributes, AsyncAttributes,
-        NotificationAttributes, RiskAttributes, DescriptorAttributes;
+        NotificationAttributes, RiskAttributes, DescriptorAttributes,
+        RestrictedSetter;
 
     const REMINDERS_CHANNEL_EMAIL      = 'email';
     const REMINDERS_CHANNEL_SMS        = 'sms';
     const MIN_ALLOWED_REMINDER_MINUTES = 1;
     const MAX_ALLOWED_REMINDER_DAYS    = 31;
+
+    /**
+     * Default Lifetime in minutes
+     * Used when lifetime is not set
+     */
+    const DEFAULT_LIFETIME             = 30;
 
     /**
      * unique transaction id defined by merchant
@@ -115,7 +125,7 @@ class Create extends \Genesis\API\Request
      *
      * @var int
      */
-    protected $lifetime;
+    protected $lifetime = self::DEFAULT_LIFETIME;
 
     /**
      * Signifies whether the ’Pay Later’ feature would be enabled on the WPF
@@ -123,6 +133,13 @@ class Create extends \Genesis\API\Request
      * @var bool
      */
     protected $pay_later = false;
+
+    /**
+     * The language of reminders
+     *
+     * @var $reminder_language
+     */
+    protected $reminder_language;
 
     /**
      * @var array
@@ -135,6 +152,13 @@ class Create extends \Genesis\API\Request
      * @var array
      */
     protected $transaction_types = [];
+
+    /**
+     * Language code in ISO-639-1
+     *
+     * @var $language
+     */
+    protected $language;
 
     /**
      * @param bool $flag
@@ -177,6 +201,23 @@ class Create extends \Genesis\API\Request
     public function setPayLater($flag)
     {
         $this->pay_later = (bool) $flag;
+
+        return $this;
+    }
+
+    public function setReminderLanguage($value)
+    {
+        // Strip the input down to two letters
+        $language = Common::filterLanguageCode($value);
+
+        $this->allowedOptionsSetter(
+            'reminder_language',
+            i18n::getAll(),
+            $language,
+            'Reminder Language value is not valid ISO-639-1 language code.'
+        );
+
+        $this->reminder_language = $language;
 
         return $this;
     }
@@ -441,20 +482,20 @@ class Create extends \Genesis\API\Request
      */
     public function setLanguage($language = \Genesis\API\Constants\i18n::EN)
     {
-        // Strip the input down to two letters
-        $language = substr(strtolower($language), 0, 2);
+        $language = CommonUtils::filterLanguageCode($language);
 
-        if (!\Genesis\API\Constants\i18n::isValidLanguageCode($language)) {
-            throw new \Genesis\Exceptions\InvalidArgument(
-                'The provided argument is not a valid ISO-639-1 language code!'
-            );
-        }
+        $this->allowedOptionsSetter(
+            'language',
+            i18n::getAll(),
+            $language,
+            'Invalid ISO-639-1 language code.'
+        );
 
         $this->setApiConfig(
             'url',
             $this->buildRequestURL(
                 'wpf',
-                sprintf('%s/wpf', $language),
+                sprintf('%s/wpf', $this->language),
                 false
             )
         );
@@ -509,6 +550,13 @@ class Create extends \Genesis\API\Request
         $this->requiredFieldsConditional = CommonUtils::createArrayObject($requiredFieldsConditional);
     }
 
+    protected function checkRequirements()
+    {
+        parent::checkRequirements();
+
+        $this->validateReminders();
+    }
+
     /**
      * Create the request's Tree structure
      *
@@ -544,10 +592,37 @@ class Create extends \Genesis\API\Request
                 'risk_params'               => $this->getRiskParamsStructure(),
                 'dynamic_descriptor_params' => $this->getDynamicDescriptorParamsStructure(),
                 'pay_later'                 => var_export($this->pay_later, true),
+                'reminder_language'         => $this->reminder_language,
                 'reminders'                 => $this->getRemindersStructure()
             ]
         ];
 
         $this->treeStructure = \Genesis\Utils\Common::createArrayObject($treeStructure);
+    }
+
+    /**
+     * Validates Reminders
+     *
+     * @throws ErrorParameter
+     */
+    protected function validateReminders()
+    {
+        $reminders = $this->getRemindersStructure();
+
+        if (empty($reminders)) {
+            return;
+        }
+
+        foreach ($reminders as $value) {
+            if ($value['reminder']['after'] >= $this->lifetime) {
+                throw new ErrorParameter(
+                    sprintf(
+                        'Reminder (%dmin) could not be greater than or equal to lifetime (%dmin).',
+                        $value['reminder']['after'],
+                        $this->lifetime
+                    )
+                );
+            }
+        }
     }
 }

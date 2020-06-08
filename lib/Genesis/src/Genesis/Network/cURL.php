@@ -22,6 +22,8 @@
  */
 namespace Genesis\Network;
 
+use Genesis\API\Request;
+
 /**
  * cURL Network Interface
  * Note: requires php curl extension
@@ -85,18 +87,18 @@ class cURL extends Base
             CURLOPT_FRESH_CONNECT  => true,
             CURLOPT_RETURNTRANSFER => true,
             // SSL/TLS Configuration
-            CURLOPT_CAINFO         => $requestData['ca_bundle'],
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2
         ];
 
-        if ('POST' == strtoupper($requestData['type'])) {
-            $post = [
-                CURLOPT_POST       => true,
+        $options = $options + $this->getMethodOptionByType($requestData['type']);
+
+        if (Request::METHOD_GET != strtoupper($requestData['type'])) {
+            $data = [
                 CURLOPT_POSTFIELDS => $requestData['body']
             ];
 
-            $options = $options + $post;
+            $options = $options + $data;
         }
 
         curl_setopt_array($this->curlHandle, $options);
@@ -131,6 +133,29 @@ class cURL extends Base
 
         if ($errNo > 0) {
             throw new \Genesis\Exceptions\ErrorNetwork($errStr, $errNo);
+        }
+    }
+
+    /**
+     * Get the Curl HTTP Option by Type
+     *
+     * @param $type
+     * @return array
+     */
+    public function getMethodOptionByType($type)
+    {
+        switch (strtoupper($type)) {
+            case Request::METHOD_POST:
+                return [
+                    CURLOPT_POST => true
+                ];
+                break;
+            case Request::METHOD_PUT:
+                return [
+                    CURLOPT_CUSTOMREQUEST => 'PUT'
+                ];
+            default:
+                return [];
         }
     }
 }

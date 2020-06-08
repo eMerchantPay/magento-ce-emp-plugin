@@ -293,7 +293,7 @@ final class Common
      *
      * @return bool | string
      */
-    public static function stringToBoolean($string)
+    public static function filterBoolean($string)
     {
         $flag = filter_var($string, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
@@ -415,5 +415,29 @@ final class Common
     public static function endsWith($str, $suffix)
     {
         return stripos($str, $suffix) === strlen($str) - strlen($suffix);
+    }
+
+    /**
+     * Filter language input value
+     *
+     * @param $language
+     * @return string
+     */
+    public static function filterLanguageCode($language)
+    {
+        return (string) substr(strtolower($language), 0, 2);
+    }
+
+    /**
+     * Cast string to boolean
+     *
+     * @param string|bool $string
+     * @return bool
+     */
+    public static function toBoolean($string)
+    {
+        $filterBoolean = static::filterBoolean($string);
+
+        return (is_bool($filterBoolean)) ? $filterBoolean : (bool) $filterBoolean;
     }
 }
