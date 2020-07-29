@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
-* [GenesisPHP v1.18.3](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.3) - (Integrated in Module)
+* [GenesisPHP v1.18.4](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.4) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 
 *Note:* This module has been tested only with Magento __Community Edition__, it may not work
@@ -76,76 +76,71 @@ Supported Transactions
 	* __Sale (3D-Secure)__
 
 * ```emerchantpay Checkout``` Payment Method
-  * __Alternative Payment Methods__
-    * __P24__
-    * __POLi__
-    * __PPRO__
-      * __eps__
-      * __GiroPay__
-      * __Mr.Cash__
-      * __MyBank__
-      * __Przelewy24__
-      * __Qiwi__
-      * __SafetyPay__
-      * __TrustPay__
-    * __SOFORT__
-    * __Trustly Sale__
-    * __PayPal Express__
-  * __Credit Cards__
+    * __Argencard__
     * __Aura__
     * __Authorize__
     * __Authorize (3D-Secure)__
+    * __Baloto__
+    * __Bancomer__
+    * __Bancontact__
+    * __Banco de Occidente__
+    * __Banco do Brasil__
+    * __BitPay__
+    * __Boleto__
+    * __Bradesco__
     * __Cabal__
+    * __CashU__
     * __Cencosud__
+    * __Davivienda__
+    * __Efecty__
     * __Elo__
+    * __eps__
+    * __eZeeWallet__
+    * __Fashioncheque__
+    * __GiroPay__
+    * __iDeal__
+    * __iDebit__
+    * __InstaDebit__
+    * __InstantTransfer__
+    * __InitRecurringSale__
+    * __InitRecurringSale (3D-Secure)__
+    * __Intersolve__
+    * __Itau__
+    * __Klarna__
+    * __Multibanco__
+    * __MyBank__
     * __Naranja__
     * __Nativa__
+    * __Neosurf__
+    * __Neteller__
+    * __Online Banking__
+    * __OXXO__
+    * __P24__
+    * __Pago Facil__
+    * __PayPal Express__
+    * __PaySafeCard__
+    * __PayU__
+    * __POLi__
+    * __PPRO__
+    * __PSE__
+    * __Qiwi__
+    * __RapiPago__
+    * __Redpagos__
+    * __SafetyPay__
     * __Sale__
     * __Sale (3D-Secure)__
-    * __Tarjeta Shopping__
-    * __Recurring__
-      * __InitRecurringSale__
-      * __InitRecurringSale (3D-Secure)__
-      * __RecurringSale__
-  * __Cash Payments__
-    * __Baloto__
-    * __Banamex__
-    * __Banco de Occidente__
-    * __Boleto__
-    * __Efecty__
-    * __OXXO__
-    * __Pago Facil__
-    * __Redpagos__
-    * __Santander Cash__
-  * __Crypto__
-    * __BitPay__
-  * __Sepa Direct Debit__
-    * __SDD Sale__
-  * __Online Banking Payments__
-    * __Alipay__
-    * __Banco do Brasil__
-    * __Bancomer__
-    * __Bradesco__
-    * __Entercash__
-    * __iDebit Payin__
-    * __INPay__
-    * __InstaDebit Payin__
-    * __InstantTransfer__
-    * __Itau__
-    * __Multibanco__
-    * __OnlineBanking__
-    * __PayU__
-    * __RapiPago__
     * __Santander__
-    * __WeChat__
-  * __Vouchers__
-    * __CashU__
-    * __PayByVoucher (Sale)__
-    * __PaySafeCard__
-  * __Electronic Wallets__
-    * __eZeeWallet__
-    * __Neteller__
+    * __Santander Cash__
+    * __Sepa Direct Debit__
+    * __SOFORT__
+    * __Tarjeta Shopping__
+    * __TCS__
+    * __Trustly__
+    * __TrustPay__
+    * __UPI__
     * __WebMoney__
+    * __WebPay__
+    * __WeChat__
     * __Zimpler__
 
 _Note_: If you have trouble with your credentials or terminal configuration, get in touch with our [support] team

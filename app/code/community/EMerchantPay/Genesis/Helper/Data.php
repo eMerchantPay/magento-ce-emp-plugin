@@ -25,6 +25,7 @@
 class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 {
     const SECURE_TRANSCTION_TYPE_SUFFIX = "3D";
+    const PPRO_TRANSACTION_SUFFIX       = '_ppro';
 
     const RAW_DETAILS_TRANSACTION_TYPE = 'transaction_type';
     const RAW_DETAILS_TERMINAL_TOKEN = 'terminal_token';
@@ -326,6 +327,101 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         return $description;
+    }
+
+    /**
+     * @param $order
+     * @return array
+     */
+    public function getItemListArray($order)
+    {
+        $productResult = array();
+
+        foreach ($order->getAllItems() as $item) {
+            /** @var $item Mage_Sales_Model_Quote_Item */
+            $product = $item->getProduct();
+
+            $type = $item->getIsVirtual() ?
+                \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DIGITAL :
+                \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_PHYSICAL;
+
+            if ($item->getPrice() <= 0) {
+                continue;
+            }
+
+            $productResult[] = array(
+                'sku'  =>
+                    $product->getSku(),
+                'name' =>
+                    $product->getName(),
+                'qty'  =>
+                    $item->getData('qty_ordered'),
+                'price' =>
+                    $item->getPrice(),
+                'type' =>
+                    $type
+            );
+        }
+
+        return $productResult;
+    }
+
+    /**
+     * @param Mage_Sales_Model_Order $order
+     * @return \Genesis\API\Request\Financial\Alternatives\Klarna\Items
+     * @throws \Genesis\Exceptions\ErrorParameter
+     */
+    public function getKlarnaCustomParamItems($order)
+    {
+        $items     = new \Genesis\API\Request\Financial\Alternatives\Klarna\Items($order->getOrderCurrencyCode());
+        $itemsList = $this->getItemListArray($order);
+        foreach ($itemsList as $item) {
+            $klarnaItem = new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                $item['name'],
+                $item['type'],
+                $item['qty'],
+                $item['price']
+            );
+            $items->addItem($klarnaItem);
+        }
+
+        $taxes = floatval($order->getTaxAmount());
+        if ($taxes) {
+            $items->addItem(
+                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                    $this->__('Taxes'),
+                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SURCHARGE,
+                    1,
+                    $taxes
+                )
+            );
+        }
+
+        $discount = floatval($order->getDiscountAmount());
+        if ($discount) {
+            $items->addItem(
+                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                    $this->__('Discount'),
+                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_DISCOUNT,
+                    1,
+                    -$discount
+                )
+            );
+        }
+
+        $shipping_cost = floatval($order->getShippingAmount());
+        if ($shipping_cost) {
+            $items->addItem(
+                new \Genesis\API\Request\Financial\Alternatives\Klarna\Item(
+                    $this->__('Shipping Costs'),
+                    \Genesis\API\Request\Financial\Alternatives\Klarna\Item::ITEM_TYPE_SHIPPING_FEE,
+                    1,
+                    $shipping_cost
+                )
+            );
+        }
+
+        return $items;
     }
 
     /**
@@ -915,6 +1011,7 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
         if ($helper->isLoggedIn()) {
             return $helper->getCurrentCustomer()->getId();
         }
+
         return 0;
     }
 
@@ -950,7 +1047,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
      * @param Varien_Object|Mage_Sales_Model_Order_Payment $payment
      * @return Mage_Sales_Model_Order_Payment_Transaction|null
      */
-    public function getCaptureForRefund(Varien_Object $payment) {
+    public function getCaptureForRefund(Varien_Object $payment)
+    {
         $capture = $payment->lookupTransaction(
             null,
             Mage_Sales_Model_Order_Payment_Transaction::TYPE_CAPTURE

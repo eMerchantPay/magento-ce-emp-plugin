@@ -167,15 +167,7 @@ class EMerchantPay_Genesis_Model_Direct
      */
     protected function getTransactionTypeRequestClassName($transactionType)
     {
-        $requestClassName = \Genesis\Utils\Common::snakeCaseToCamelCase(
-            str_replace('3d', '3D', $transactionType)
-        );
-
-        $recurringInnerNamespace =
-            strpos($transactionType, 'recurring') !== false
-                ? "Recurring\\"
-                : '';
-        return "Financial\\Cards\\{$recurringInnerNamespace}{$requestClassName}";
+        return \Genesis\API\Constants\Transaction\Types::getFinancialRequestClassForTrxType($transactionType);
     }
 
     /**
@@ -189,16 +181,11 @@ class EMerchantPay_Genesis_Model_Direct
     {
         $this->getHelper()->initLibrary();
 
-        switch ($this->getConfigTransactionType()) {
-            default:
-            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-            case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
-                return Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE;
-
-            case \Genesis\API\Constants\Transaction\Types::SALE:
-            case \Genesis\API\Constants\Transaction\Types::SALE_3D:
-                return Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE_CAPTURE;
+        if (\Genesis\API\Constants\Transaction\Types::isAuthorize($this->getConfigTransactionType())) {
+            return Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE;
         }
+
+        return Mage_Payment_Model_Method_Abstract::ACTION_AUTHORIZE_CAPTURE;
     }
 
     /**
@@ -469,7 +456,14 @@ class EMerchantPay_Genesis_Model_Direct
 
             $referenceId = $authorize->getTxnId();
 
-            $genesis = new \Genesis\Genesis('Financial\Capture');
+            $rawDetails = $authorize->getAdditionalInformation(
+                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS
+            );
+            $transactionType = $rawDetails['transaction_type'];
+
+            $genesis = new \Genesis\Genesis(
+                \Genesis\API\Constants\Transaction\Types::getCaptureTransactionClass($transactionType)
+            );
 
             $genesis
                 ->request()
@@ -572,7 +566,14 @@ class EMerchantPay_Genesis_Model_Direct
 
             $referenceId = $capture->getTxnId();
 
-            $genesis = new \Genesis\Genesis('Financial\Refund');
+            $rawDetails = $capture->getAdditionalInformation(
+                Mage_Sales_Model_Order_Payment_Transaction::RAW_DETAILS
+            );
+            $transactionType = $rawDetails['transaction_type'];
+
+            $genesis = new \Genesis\Genesis(
+                \Genesis\API\Constants\Transaction\Types::getRefundTransactionClass($transactionType)
+            );
 
             $genesis
                 ->request()
@@ -875,28 +876,19 @@ class EMerchantPay_Genesis_Model_Direct
 
                 $transaction->save();
 
-                // @codingStandardsIgnoreStart
-                switch ($reconcile->transaction_type) {
-                    // @codingStandardsIgnoreEnd
-                    case \Genesis\API\Constants\Transaction\Types::AUTHORIZE:
-                    case \Genesis\API\Constants\Transaction\Types::AUTHORIZE_3D:
-                        $payment->registerAuthorizationNotification($reconcile->amount);
-                        break;
-                    case \Genesis\API\Constants\Transaction\Types::SALE:
-                    case \Genesis\API\Constants\Transaction\Types::SALE_3D:
-                    case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE:
-                    case \Genesis\API\Constants\Transaction\Types::INIT_RECURRING_SALE_3D:
-                        $payment->setShouldCloseParentTransaction(true);
-                        $payment->setTransactionId(
-                            // @codingStandardsIgnoreStart
-                            $reconcile->unique_id
-                            // @codingStandardsIgnoreEnd
-                        );
+                $isCapturable = \Genesis\API\Constants\Transaction\Types::isAuthorize($reconcile->transaction_type);
 
-                        $payment->registerCaptureNotification($reconcile->amount);
-                        break;
-                    default:
-                        break;
+                if ($isCapturable) {
+                    $payment->registerAuthorizationNotification($reconcile->amount);
+                } else {
+                    $payment->setShouldCloseParentTransaction(true);
+                    $payment->setTransactionId(
+                    // @codingStandardsIgnoreStart
+                        $reconcile->unique_id
+                    // @codingStandardsIgnoreEnd
+                    );
+
+                    $payment->registerCaptureNotification($reconcile->amount);
                 }
 
                 // @codingStandardsIgnoreStart
