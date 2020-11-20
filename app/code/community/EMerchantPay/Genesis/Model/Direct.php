@@ -258,6 +258,7 @@ class EMerchantPay_Genesis_Model_Direct
 
             $billing = $order->getBillingAddress();
             $shipping = $order->getShippingAddress();
+	        $platform_prefix = $this->getHelper()->getPlatformTransactionPrefix();
 
             $genesis = new \Genesis\Genesis(
                 $this->getTransactionTypeRequestClassName(
@@ -269,14 +270,18 @@ class EMerchantPay_Genesis_Model_Direct
                 ->request()
                 ->setTransactionId(
                     $this->getHelper()->genTransactionId(
-                        $order->getIncrementId()
+                        $platform_prefix . $order->getIncrementId()
                     )
                 )
                 ->setRemoteIp(
                     $this->getHelper()->getRemoteAddress()
                 )
                 ->setUsage(
-                    $this->getHelper()->getItemList($order)
+	                $this->getHelper()->__('Payment via')
+	                . ' '
+	                . $this->getHelper()->getStoreName()
+	                . ' '
+	                . $this->getHelper()->getItemList($order)
                 )
                 ->setCurrency(
                     $order->getOrderCurrencyCode()
@@ -692,7 +697,9 @@ class EMerchantPay_Genesis_Model_Direct
             $genesis
                 ->request()
                     ->setTransactionId(
-                        $this->getHelper()->genTransactionId($payment->getOrder()->getIncrementId())
+                        $this->getHelper()->genTransactionId(
+                        	$payment->getOrder()->getIncrementId()
+                        )
                     )
                     ->setRemoteIp(
                         $this->getHelper()->getRemoteAddress()
@@ -1021,7 +1028,9 @@ class EMerchantPay_Genesis_Model_Direct
                 ->setTransactionId(
                     $profile->getInternalReferenceId()
                 )
-                ->setUsage('Magento Init Recurring Payment')
+                ->setUsage(
+	                $this->getHelper()->__('Recurring Payment via') . ' ' . $this->getHelper()->getStoreName()
+                )
                 ->setMoto('')
                 ->setRemoteIp(
                     $this->getHelper()->getRemoteAddress()

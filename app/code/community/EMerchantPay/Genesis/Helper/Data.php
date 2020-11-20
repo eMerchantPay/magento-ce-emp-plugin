@@ -30,6 +30,8 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
     const RAW_DETAILS_TRANSACTION_TYPE = 'transaction_type';
     const RAW_DETAILS_TERMINAL_TOKEN = 'terminal_token';
 
+    const PLATFORM_TRANSACTION_PREFIX = 'mage_';
+
     /**
      * Include Genesis library
      *
@@ -1077,4 +1079,25 @@ class EMerchantPay_Genesis_Helper_Data extends Mage_Core_Helper_Abstract
 
         return $capture;
     }
+
+	/**
+	 * Return Store frontend name
+	 *
+	 * @return string
+	 */
+	public function getStoreName()
+	{
+		return Mage::app()->getStore()->getFrontendName();
+	}
+
+	/**
+	 * Return platform transaction prefix
+	 *
+	 * @return string
+	 */
+	public function getPlatformTransactionPrefix()
+	{
+		return self::PLATFORM_TRANSACTION_PREFIX;
+	}
+
 }

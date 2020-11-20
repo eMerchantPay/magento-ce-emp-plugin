@@ -6,7 +6,7 @@ This is a Payment Module for Magento Community Edition, that gives you the abili
 Requirements
 ------------
 
-* Magento Community Edition > 1.7 (Tested up to: __1.9.3.1__)
+* Magento Community Edition > 1.7 (Tested up to: __1.9.3.6__)
 * [GenesisPHP v1.18.4](https://github.com/GenesisGateway/genesis_php/releases/tag/1.18.4) - (Integrated in Module)
 * PCI-certified server in order to use ```emerchantpay Direct```
 

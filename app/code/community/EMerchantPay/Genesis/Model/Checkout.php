@@ -77,13 +77,14 @@ class EMerchantPay_Genesis_Model_Checkout
 
             $genesis = new \Genesis\Genesis('WPF\Create');
 
-            $orderItemsList = $this->getHelper()->getItemList($order);
+            $orderItemsList   = $this->getHelper()->getItemList($order);
+            $platformPrefix  = $this->getHelper()->getPlatformTransactionPrefix();
 
             $genesis
                 ->request()
                     ->setTransactionId(
                         $this->getHelper()->genTransactionId(
-                            $order->getIncrementId()
+	                        $platformPrefix . $order->getIncrementId()
                         )
                     )
                     ->setCurrency(
@@ -91,7 +92,7 @@ class EMerchantPay_Genesis_Model_Checkout
                     )
                     ->setAmount($amount)
                     ->setUsage(
-                        $this->getHelper()->__('Magento Payment')
+	                    $this->getHelper()->__('Payment via') . ' ' . $this->getHelper()->getStoreName()
                     )
                     ->setDescription($orderItemsList)
                     ->setCustomerPhone($billing->getTelephone())
@@ -364,7 +365,7 @@ class EMerchantPay_Genesis_Model_Checkout
                 ->request()
                     ->setTransactionId(
                         $this->getHelper()->genTransactionId(
-                            $payment->getOrder()->getIncrementId()
+                        	$payment->getOrder()->getIncrementId()
                         )
                     )
                     ->setRemoteIp(
@@ -473,7 +474,7 @@ class EMerchantPay_Genesis_Model_Checkout
                 ->request()
                     ->setTransactionId(
                         $this->getHelper()->genTransactionId(
-                            $payment->getOrder()->getIncrementId()
+                        	$payment->getOrder()->getIncrementId()
                         )
                     )
                     ->setRemoteIp(
@@ -594,7 +595,7 @@ class EMerchantPay_Genesis_Model_Checkout
                 ->request()
                     ->setTransactionId(
                         $this->getHelper()->genTransactionId(
-                            $payment->getOrder()->getIncrementId()
+                        	$payment->getOrder()->getIncrementId()
                         )
                     )
                     ->setRemoteIp(
@@ -1110,7 +1111,7 @@ class EMerchantPay_Genesis_Model_Checkout
                     $amount
                 )
                 ->setUsage(
-                    $this->getHelper()->__('Magento Init Recurring Payment')
+	                $this->getHelper()->__('Recurring Payment via') . ' ' . $this->getHelper()->getStoreName()
                 )
                 ->setDescription(
                     $this->getHelper()->getRecurringProfileItemDescription(

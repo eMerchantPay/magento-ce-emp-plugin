@@ -302,12 +302,13 @@ class EMerchantPay_Genesis_Model_Task_Recurring
             }
         }
 
+        $platform_prefix = $this->getHelper()->getPlatformTransactionPrefix();
         $genesis = new \Genesis\Genesis("Financial\\Cards\\Recurring\\RecurringSale");
 
         $genesis
             ->request()
                 ->setTransactionId(
-                    $this->getHelper()->genTransactionId()
+	                $this->getHelper()->genTransactionId($platform_prefix)
                 )
                 ->setReferenceId(
                     $initRecurringCaptureTransaction->getTxnId()
