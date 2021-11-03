@@ -1,3 +1,6 @@
+\*CAUTION\* The **emerchantpay Gateway Module Plugin for Magento CE** is deprecated and no longer will receive updates. Use [**emerchantpay Gateway Module Plugin for Magento CE, EE, ECE**](https://github.com/eMerchantPay/magento2-emp-plugin) for Magento 2 CE, EE, ECE
+=============================
+
 emerchantpay Gateway Module for Magento CE
 =============================
 
